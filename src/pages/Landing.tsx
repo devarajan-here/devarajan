@@ -205,7 +205,7 @@ export default function Landing() {
 
                   <TabsContent value="overview" className="mt-6 space-y-6">
                     <div>
-                      <h3 className="text-2xl font-semibold mb-2">Objective</h3>
+                      <h3 className="text-2xl font-semibold mb-2 text-glow-white">Objective</h3>
                       <p className="text-white/80 leading-relaxed">
                         Aspiring Security Analyst with strong foundational knowledge in network security, threat intelligence, and log
                         analysis. Eager to contribute to proactive threat detection and risk mitigation to strengthen organizational
@@ -216,7 +216,7 @@ export default function Landing() {
 
                   <TabsContent value="skills" className="mt-6 space-y-6">
                     <div>
-                      <h4 className="text-2xl font-semibold mb-3">Technical Skills</h4>
+                      <h4 className="text-2xl font-semibold mb-3 text-glow-white">Technical Skills</h4>
                       <ul className="space-y-3 text-white/80">
                         <li>
                           <span className="font-semibold">SOC Operations:</span>
@@ -278,7 +278,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="soft-skills" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-3">Soft Skills</h3>
+                    <h3 className="text-2xl font-semibold mb-3 text-glow-white">Soft Skills</h3>
                     <ul className="list-disc list-inside space-y-1 text-white/80">
                       <li>Analytical Thinking</li>
                       <li>Problem Solving</li>
@@ -292,7 +292,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="languages" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-3">Languages</h3>
+                    <h3 className="text-2xl font-semibold mb-3 text-glow-white">Languages</h3>
                     <ul className="list-disc list-inside space-y-1 text-white/80">
                       <li>English (Fluent)</li>
                       <li>Malayalam (Native)</li>
@@ -302,7 +302,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="experience" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-4">Professional & Practical Experience</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-glow-white">Professional & Practical Experience</h3>
                     <p className="text-white/70 mb-6">
                       Chronological overview of internships and hands-on learning experiences.
                     </p>
@@ -351,7 +351,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="projects" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-4">Key Projects</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-glow-white">Key Projects</h3>
                     <p className="text-white/70 mb-6">
                       Click a project to view details.
                     </p>
@@ -377,7 +377,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="education" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-4">Education</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-glow-white">Education</h3>
                     <ul className="list-disc list-inside space-y-2 text-white/80">
                       <li>B.Tech in Computer Science — APJAKTU (First Class) | 2020–2024</li>
                       <li>College: SNMIMT SNM Institute of Management and Technology</li>
@@ -387,7 +387,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="certifications" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-4">Certifications</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-glow-white">Certifications</h3>
                     <ul className="list-disc list-inside space-y-2 text-white/80">
                       <li>CompTIA Security+ — CompTIA | 08/2025 (Credential ID: COMP001022645550)</li>
                       <li>Generative AI Fundamentals — GeeksforGeeks</li>
@@ -399,7 +399,7 @@ export default function Landing() {
                   </TabsContent>
 
                   <TabsContent value="leadership" className="mt-6">
-                    <h3 className="text-2xl font-semibold mb-4">Leadership & Extracurriculars</h3>
+                    <h3 className="text-2xl font-semibold mb-4 text-glow-white">Leadership & Extracurriculars</h3>
                     <ul className="list-disc list-inside space-y-3 text-white/80">
                       <li>ISTE Member and Student Coordinator @ SNMIMT</li>
                       <li>Espaniac CSE Association Member and Student Coordinator @ SNMIMT</li>
