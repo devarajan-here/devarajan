@@ -310,7 +310,7 @@ export default function Landing() {
                       <div className="relative pl-10">
                         <div className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-white"></div>
                         <div className="absolute left-0 top-2 bottom-[-2rem] w-px bg-white/20" />
-                        <h4 className="text-xl font-semibold">Cybersecurity Analyst Intern</h4>
+                        <h4 className="text-xl font-semibold text-glow-white">Cybersecurity Analyst Intern</h4>
                         <p className="text-white/60">bblewrap | June 2024 – December 2024</p>
                         <ul className="list-disc list-inside text-white/80 mt-2 space-y-1">
                           <li>Identified application-level vulnerabilities in Manappuram Finance MADU app and supported remediation.</li>
@@ -321,7 +321,7 @@ export default function Landing() {
                       <div className="relative pl-10">
                         <div className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-white"></div>
                         <div className="absolute left-0 top-2 bottom-[-2rem] w-px bg-white/20" />
-                        <h4 className="text-xl font-semibold">Cybersecurity Engineer</h4>
+                        <h4 className="text-xl font-semibold text-glow-white">Cybersecurity Engineer</h4>
                         <p className="text-white/60">Finpro Technologies | January 2025</p>
                         <ul className="list-disc list-inside text-white/80 mt-2 space-y-1">
                           <li>Supported ISO 27001-aligned GRC initiatives.</li>
@@ -332,7 +332,7 @@ export default function Landing() {
                       <div className="relative pl-10">
                         <div className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-white"></div>
                         <div className="absolute left-0 top-2 bottom-[-2rem] w-px bg-white/20" />
-                        <h4 className="text-xl font-semibold">Home Lab Setup</h4>
+                        <h4 className="text-xl font-semibold text-glow-white">Home Lab Setup</h4>
                         <p className="text-white/60">Self-Initiated Learning</p>
                         <ul className="list-disc list-inside text-white/80 mt-2 space-y-1">
                           <li>VMs with Splunk and Wazuh; simulated attacks/defense; Windows Event Log parsing; phishing investigation.</li>
@@ -341,7 +341,7 @@ export default function Landing() {
                       <div className="relative pl-10">
                         <div className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-white"></div>
                         <div className="absolute left-0 top-2 bottom-[-2rem] w-px bg-white/20" />
-                        <h4 className="text-xl font-semibold">TryHackMe & LetsDefend</h4>
+                        <h4 className="text-xl font-semibold text-glow-white">TryHackMe & LetsDefend</h4>
                         <p className="text-white/60">Online Platforms</p>
                         <ul className="list-disc list-inside text-white/80 mt-2 space-y-1">
                           <li>Trained on SOC workflows, SIEM concepts, endpoint protection, and phishing analysis.</li>
