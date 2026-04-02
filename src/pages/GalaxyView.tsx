@@ -97,47 +97,143 @@ function Planet({
   const angleRef = useRef(startAngle);
   const scaleVec = useMemo(() => new THREE.Vector3(), []);
 
-  // Procedural surface texture via canvas
-  const texture = useMemo(() => {
-    const s = 256;
+  // ── Seeded pseudo-random for deterministic textures ──
+  const seededRandom = useCallback((seed: number) => {
+    let x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return x - Math.floor(x);
+  }, []);
+
+  // ── Simple 2D noise function for procedural terrain ──
+  const noise2D = useCallback((px: number, py: number, seed: number) => {
+    const ix = Math.floor(px); const iy = Math.floor(py);
+    const fx = px - ix; const fy = py - iy;
+    const ux = fx * fx * (3 - 2 * fx); const uy = fy * fy * (3 - 2 * fy);
+    const a = seededRandom(ix + iy * 57 + seed);
+    const b = seededRandom(ix + 1 + iy * 57 + seed);
+    const c = seededRandom(ix + (iy + 1) * 57 + seed);
+    const d = seededRandom(ix + 1 + (iy + 1) * 57 + seed);
+    return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+  }, [seededRandom]);
+
+  const fbm = useCallback((x: number, y: number, seed: number, octaves = 6) => {
+    let val = 0, amp = 0.5, freq = 1;
+    for (let i = 0; i < octaves; i++) {
+      val += amp * noise2D(x * freq, y * freq, seed + i * 100);
+      amp *= 0.5; freq *= 2.1;
+    }
+    return val;
+  }, [noise2D]);
+
+  // ── High-detail procedural surface texture + bump map ──
+  const { texture, bumpTex } = useMemo(() => {
+    const S = 512;
     const canvas = document.createElement('canvas');
-    canvas.width = s; canvas.height = s;
+    canvas.width = S; canvas.height = S;
     const ctx = canvas.getContext('2d')!;
+    const bCanvas = document.createElement('canvas');
+    bCanvas.width = S; bCanvas.height = S;
+    const bCtx = bCanvas.getContext('2d')!;
+
     const base = new THREE.Color(baseColor);
+    const emC = new THREE.Color(emissiveColor);
+    const seed = name.charCodeAt(0) * 137 + name.length * 53;
+    const imgData = ctx.createImageData(S, S);
+    const bmpData = bCtx.createImageData(S, S);
 
-    ctx.fillStyle = `rgb(${Math.round(base.r*220)},${Math.round(base.g*220)},${Math.round(base.b*220)})`;
-    ctx.fillRect(0, 0, s, s);
+    for (let py = 0; py < S; py++) {
+      for (let px = 0; px < S; px++) {
+        const u = px / S; const v = py / S;
+        const lat = (v - 0.5) * Math.PI;
 
-    // latitude bands
-    for (let band = 0; band < 12; band++) {
-      const y = (band / 12) * s;
-      const h = s / 14;
-      const br = 0.7 + Math.random() * 0.35;
-      ctx.fillStyle = `rgba(${Math.round(base.r*255*br)},${Math.round(base.g*255*br)},${Math.round(base.b*255*br)},0.35)`;
-      ctx.fillRect(0, y, s, h);
+        // Fractal noise terrain
+        const n1 = fbm(u * 8, v * 8, seed, 6);
+        const n2 = fbm(u * 16 + 50, v * 16 + 50, seed + 7, 4);
+        const n3 = fbm(u * 4, v * 4, seed + 20, 3);
+
+        // Terrain height
+        const terrain = n1 * 0.6 + n2 * 0.25 + n3 * 0.15;
+
+        // Ice caps near poles
+        const poleFade = Math.pow(Math.abs(Math.sin(lat)), 6);
+
+        // Color mixing: deep vs surface
+        let r: number, g: number, bl: number;
+        const deep = Math.max(0, Math.min(1, (terrain - 0.3) * 3));
+
+        // Mix base color with emissive for surface variation
+        r = base.r * 255 * (0.5 + terrain * 0.6) + emC.r * 80 * deep;
+        g = base.g * 255 * (0.5 + terrain * 0.6) + emC.g * 80 * deep;
+        bl = base.b * 255 * (0.5 + terrain * 0.6) + emC.b * 80 * deep;
+
+        // Latitude bands (gas-giant style subtle bands)
+        const bandStrength = Math.sin(v * Math.PI * 18 + n1 * 2) * 0.08;
+        r += bandStrength * 30;
+        g += bandStrength * 25;
+        bl += bandStrength * 20;
+
+        // Surface detail cracks
+        const crack = fbm(u * 40, v * 40, seed + 99, 3);
+        if (crack > 0.65) {
+          r *= 0.85; g *= 0.85; bl *= 0.85;
+        }
+
+        // Crater-like dark spots
+        const crater = fbm(u * 12, v * 12, seed + 200, 4);
+        if (crater > 0.72) {
+          const cDepth = (crater - 0.72) * 5;
+          r *= (1 - cDepth * 0.3);
+          g *= (1 - cDepth * 0.3);
+          bl *= (1 - cDepth * 0.25);
+        }
+
+        // Ice caps (whitening near poles)
+        if (poleFade > 0.15) {
+          const iceMix = Math.min(1, (poleFade - 0.15) * 2.5);
+          r = r * (1 - iceMix) + 220 * iceMix;
+          g = g * (1 - iceMix) + 228 * iceMix;
+          bl = bl * (1 - iceMix) + 240 * iceMix;
+        }
+
+        // Atmospheric scattering (limb darkening for edges)
+        const limbU = Math.abs(u - 0.5) * 2;
+        const limbDark = 1 - Math.pow(limbU, 3) * 0.25;
+        r *= limbDark; g *= limbDark; bl *= limbDark;
+
+        const idx = (py * S + px) * 4;
+        imgData.data[idx] = Math.max(0, Math.min(255, r));
+        imgData.data[idx + 1] = Math.max(0, Math.min(255, g));
+        imgData.data[idx + 2] = Math.max(0, Math.min(255, bl));
+        imgData.data[idx + 3] = 255;
+
+        // Bump map — terrain height as grayscale
+        const bump = Math.max(0, Math.min(255, terrain * 255));
+        bmpData.data[idx] = bump;
+        bmpData.data[idx + 1] = bump;
+        bmpData.data[idx + 2] = bump;
+        bmpData.data[idx + 3] = 255;
+      }
     }
-    // noise dots
-    for (let i = 0; i < 1800; i++) {
-      const x = Math.random() * s;
-      const y = Math.random() * s;
-      const r = Math.random() * 3;
-      const br = 0.6 + Math.random() * 0.5;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${Math.round(base.r*255*br)},${Math.round(base.g*255*br)},${Math.round(base.b*255*br)},0.18)`;
-      ctx.fill();
-    }
+    ctx.putImageData(imgData, 0, 0);
+    bCtx.putImageData(bmpData, 0, 0);
+
     const tex = new THREE.CanvasTexture(canvas);
-    return tex;
-  }, [baseColor]);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.ClampToEdgeWrapping;
+    const bTex = new THREE.CanvasTexture(bCanvas);
+    bTex.wrapS = THREE.RepeatWrapping;
+    bTex.wrapT = THREE.ClampToEdgeWrapping;
+    return { texture: tex, bumpTex: bTex };
+  }, [baseColor, emissiveColor, name, fbm]);
 
   const mat = useMemo(() => new THREE.MeshStandardMaterial({
     map: texture,
+    bumpMap: bumpTex,
+    bumpScale: 0.035,
     emissive: new THREE.Color(emissiveColor),
-    emissiveIntensity: hovered ? 0.55 : (isSOC ? 0.38 : 0.12),
-    roughness: 0.72,
-    metalness: 0.25,
-  }), [texture, emissiveColor, hovered, isSOC]);
+    emissiveIntensity: hovered ? 0.45 : (isSOC ? 0.3 : 0.08),
+    roughness: 0.8,
+    metalness: 0.15,
+  }), [texture, bumpTex, emissiveColor, hovered, isSOC]);
 
   const cloudMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#ffffff',
