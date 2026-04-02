@@ -9,9 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 function MouseOrbitCamera() {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
-  const radius = useRef(22);
-  const RADIUS_MIN = 8;
-  const RADIUS_MAX = 40;
+  const radius = useRef(30);
+  const RADIUS_MIN = 10;
+  const RADIUS_MAX = 60;
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -69,10 +69,10 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
     for (let i = 0; i < count; i++) {
       const arm = Math.floor(Math.random() * 3);
       const armAngle = (arm / 3) * Math.PI * 2;
-      const radius = Math.pow(Math.random(), 0.5) * 3.8;
+      const radius = Math.pow(Math.random(), 0.5) * 7;
       const spin = radius * 1.4;
       const angle = armAngle + spin + (Math.random() - 0.5) * 0.7;
-      const spread = (1 - radius / 4) * 0.4;
+      const spread = (1 - radius / 8) * 0.6;
       positions[i * 3] = Math.cos(angle) * radius + (Math.random() - 0.5) * spread;
       positions[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.4;
       positions[i * 3 + 2] = Math.sin(angle) * radius + (Math.random() - 0.5) * spread;
@@ -92,7 +92,7 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
   }, [positions, colors]);
 
   const mat = useMemo(() => new THREE.PointsMaterial({
-    size: hovered ? 0.032 : 0.022,
+    size: hovered ? 0.055 : 0.038,
     vertexColors: true,
     transparent: true,
     opacity: hovered ? 1 : 0.88,
@@ -109,7 +109,7 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
     }
   });
 
-  const ringGeo = useMemo(() => new THREE.RingGeometry(4.0, 4.5, 64), []);
+  const ringGeo = useMemo(() => new THREE.RingGeometry(7.5, 8.5, 64), []);
   const ringMat = useMemo(() => new THREE.MeshBasicMaterial({
     color, transparent: true, opacity: hovered ? 0.3 : 0.08,
     side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
@@ -121,23 +121,23 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
         <points geometry={geo} material={mat} />
         <mesh geometry={ringGeo} material={ringMat} rotation={[Math.PI / 2, 0, 0]} />
         <mesh>
-          <sphereGeometry args={[4.2, 12, 12]} />
+          <sphereGeometry args={[8, 12, 12]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       </group>
       <Billboard follow>
-        <Text position={[0, -5.2, 0]} fontSize={hovered ? 0.48 : 0.34} color={color}
+        <Text position={[0, -9.5, 0]} fontSize={hovered ? 0.9 : 0.7} color={color}
           anchorX="center" anchorY="middle" fillOpacity={hovered ? 1 : 0.7}>
           {name}
         </Text>
         {hovered && (
-          <Text position={[0, -5.85, 0]} fontSize={0.22} color="#ffffff"
+          <Text position={[0, -10.6, 0]} fontSize={0.4} color="#ffffff"
             anchorX="center" anchorY="middle" fillOpacity={0.55}>
             Click to explore
           </Text>
         )}
       </Billboard>
-      {hovered && <pointLight color={color} intensity={4} distance={10} decay={2} />}
+      {hovered && <pointLight color={color} intensity={6} distance={18} decay={2} />}
     </group>
   );
 }
@@ -185,11 +185,11 @@ function NebulaDust() {
 
 // ── Galaxies — spread far apart ───────────────────────────────────────────
 const GALAXIES = [
-  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-18,  3,  2] as [number,number,number], route: '/nebula/blue-team' },
-  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 17, -4, -6] as [number,number,number], route: null },
-  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  2,  9,-20] as [number,number,number], route: null },
-  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-10, -9,-16] as [number,number,number], route: null },
-  { id: 'malware',      name: 'Malware Analytics',     color: '#10b981', position: [ 20,  6,  8] as [number,number,number], route: null },
+  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-28,  5,  3] as [number,number,number], route: '/nebula/blue-team' },
+  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 26, -6,-10] as [number,number,number], route: null },
+  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  3, 14,-30] as [number,number,number], route: null },
+  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-15,-14,-24] as [number,number,number], route: null },
+  { id: 'malware',      name: 'Malware Analytics',     color: '#10b981', position: [ 30,  9, 12] as [number,number,number], route: null },
 ];
 
 // ── Main page ─────────────────────────────────────────────────────────────
@@ -233,7 +233,7 @@ export default function HackodevNebula() {
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 4, 22], fov: 65 }} gl={{ antialias: true }}>
         <color attach="background" args={['#00000d']} />
-        <fog attach="fog" args={['#00000d', 35, 65]} />
+        <fog attach="fog" args={['#00000d', 50, 90]} />
         <Stars radius={100} depth={70} count={8000} factor={5} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
         <MouseOrbitCamera />
