@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -9,6 +9,143 @@ interface Star {
   prevZ: number;
 }
 
+// ── Canvas-based hyperspace warp transition ─────────────────────────────
+function HyperspaceWarp({ onComplete }: { onComplete: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // Hyperspace stars
+    const STAR_COUNT = 1200;
+    const stars: { x: number; y: number; z: number; speed: number; color: string }[] = [];
+    const starColors = ['#ffffff', '#aaccff', '#88bbff', '#66aaff', '#ff9944', '#ffcc66', '#aaaaff'];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: (Math.random() - 0.5) * canvas.width * 3,
+        y: (Math.random() - 0.5) * canvas.height * 3,
+        z: Math.random() * 2000,
+        speed: 2 + Math.random() * 6,
+        color: starColors[Math.floor(Math.random() * starColors.length)],
+      });
+    }
+
+    let frame = 0;
+    const TOTAL_FRAMES = 180; // ~3 seconds at 60fps
+    let animId: number;
+
+    const draw = () => {
+      frame++;
+      const progress = Math.min(frame / TOTAL_FRAMES, 1);
+
+      // Acceleration curve — slow start, extreme speed, then flash
+      const accel = Math.pow(progress, 1.8);
+      const currentSpeed = 5 + accel * 80;
+
+      // Background — darken then brighten
+      if (progress < 0.85) {
+        ctx.fillStyle = `rgba(0,0,8,${0.15 + accel * 0.1})`;
+      } else {
+        // Flash to white at end
+        const flash = (progress - 0.85) / 0.15;
+        const r = Math.floor(flash * 255);
+        const g = Math.floor(flash * 255);
+        const b = Math.floor(flash * 255);
+        ctx.fillStyle = `rgba(${r},${g},${b},${0.2 + flash * 0.8})`;
+      }
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Star streaks
+      for (const star of stars) {
+        const prevZ = star.z;
+        star.z -= currentSpeed * star.speed * 0.12;
+
+        if (star.z <= 0) {
+          star.x = (Math.random() - 0.5) * canvas.width * 3;
+          star.y = (Math.random() - 0.5) * canvas.height * 3;
+          star.z = 2000;
+          continue;
+        }
+
+        const sx = (star.x / star.z) * 500 + cx;
+        const sy = (star.y / star.z) * 500 + cy;
+        const px = (star.x / prevZ) * 500 + cx;
+        const py = (star.y / prevZ) * 500 + cy;
+
+        // Streak length grows with speed
+        const streakLength = Math.sqrt((sx - px) ** 2 + (sy - py) ** 2);
+        const brightness = Math.min(1, (1 - star.z / 2000) * (1 + accel * 2));
+
+        // Thicker, brighter lines as we accelerate
+        ctx.lineWidth = 0.5 + accel * 2.5;
+        ctx.strokeStyle = star.color;
+        ctx.globalAlpha = brightness * (0.4 + accel * 0.6);
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+
+        // Bright head dot
+        if (streakLength > 3) {
+          ctx.beginPath();
+          ctx.arc(sx, sy, 0.5 + accel * 1.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Center tunnel vortex glow
+      if (progress > 0.1) {
+        const vortexSize = 50 + accel * 250;
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, vortexSize);
+        gradient.addColorStop(0, `rgba(180,200,255,${0.15 * accel})`);
+        gradient.addColorStop(0.3, `rgba(100,150,255,${0.1 * accel})`);
+        gradient.addColorStop(0.7, `rgba(60,100,200,${0.05 * accel})`);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Chromatic ring at center
+      if (progress > 0.3) {
+        const ringAlpha = Math.min(0.6, (progress - 0.3) * 1.5);
+        ctx.strokeStyle = `rgba(100,180,255,${ringAlpha})`;
+        ctx.lineWidth = 2 + accel * 4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 20 + accel * 60, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      if (frame >= TOTAL_FRAMES) {
+        // Final white flash held
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        setTimeout(onComplete, 300);
+        return;
+      }
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    animId = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(animId);
+  }, [onComplete]);
+
+  return (
+    <canvas ref={canvasRef} className="fixed inset-0 z-[60]"
+      style={{ width: '100vw', height: '100vh' }} />
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
 export default function SpaceBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<Star[]>([]);
@@ -17,10 +154,13 @@ export default function SpaceBackground() {
   const [entering, setEntering] = useState(false);
   const navigate = useNavigate();
 
-  const handleEnter = () => {
+  const handleEnter = useCallback(() => {
     setEntering(true);
-    setTimeout(() => navigate('/nebula'), 2400);
-  };
+  }, []);
+
+  const handleWarpComplete = useCallback(() => {
+    navigate('/nebula');
+  }, [navigate]);
 
   useEffect(() => {
     speedRef.current = 0.5 * warp;
@@ -91,8 +231,6 @@ export default function SpaceBackground() {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
-
-
   return (
     <>
       <canvas
@@ -101,45 +239,17 @@ export default function SpaceBackground() {
         style={{ background: 'black' }}
       />
 
-      {/* ── Entering flash animation ── */}
+      {/* ── Hyperspace canvas warp ── */}
       <AnimatePresence>
         {entering && (
-          <motion.div key="entering" className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black">
-            {/* Radial beams pulling inward */}
-            {Array.from({ length: 16 }).map((_, i) => (
-              <motion.div key={i} className="absolute"
-                style={{
-                  width: 3, height: '60vmax', top: '50%', left: '50%',
-                  transformOrigin: 'top center',
-                  transform: `rotate(${i * 22.5}deg)`,
-                  background: 'linear-gradient(to bottom, rgba(255,200,80,0.6), transparent)',
-                  filter: 'blur(2px)',
-                }}
-                animate={{ scaleY: [0, 1, 0], opacity: [0, 0.8, 0] }}
-                transition={{ duration: 1.4, delay: i * 0.04, ease: 'easeIn' }}
-              />
-            ))}
-            {/* Contracting rings */}
-            {[500, 380, 260, 150, 60].map((size, i) => (
-              <motion.div key={size} className="absolute rounded-full border border-white/30"
-                style={{ width: size, height: size }}
-                animate={{ scale: [1, 0], opacity: [0.6, 0] }}
-                transition={{ duration: 1.2, delay: i * 0.1, ease: 'easeIn' }}
-              />
-            ))}
-            {/* White flash */}
-            <motion.div className="absolute inset-0 bg-white"
-              animate={{ opacity: [0, 0, 1] }}
-              transition={{ duration: 2.4, times: [0, 0.7, 1], ease: 'easeIn' }}
-            />
-          </motion.div>
+          <HyperspaceWarp onComplete={handleWarpComplete} />
         )}
       </AnimatePresence>
 
-      {/* ── Gargantua black hole — appears when warp = 10 ── */}
+      {/* ── White Hole — appears when warp = 10 ── */}
       <AnimatePresence>
         {warp === 10 && !entering && (
-          <motion.div key="bh-wrapper"
+          <motion.div key="wh-wrapper"
             initial={{ opacity: 0, scale: 0.3 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0 }}
@@ -147,91 +257,114 @@ export default function SpaceBackground() {
             className="fixed inset-0 z-30 flex items-center justify-center pointer-events-none"
           >
             <div className="relative pointer-events-auto flex flex-col items-center">
-              {/* Outer gravitational glow */}
-              {[420, 340, 270].map((size, i) => (
+
+              {/* Outer radiant glow rings */}
+              {[500, 400, 320, 250].map((size, i) => (
                 <motion.div key={i} className="absolute rounded-full pointer-events-none"
-                  style={{ width: size, height: size, top: '50%', left: '50%', marginLeft: -size/2, marginTop: -size/2,
-                    background: `radial-gradient(ellipse 55% 40% at 50% 52%, rgba(255,${160 - i*30},${40 - i*10},${0.08 - i*0.02}) 0%, transparent 70%)` }}
-                  animate={{ opacity: [0.6, 0.2, 0.6], scale: [1, 1.06, 1] }}
-                  transition={{ duration: 3, delay: i * 0.6, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{
+                    width: size, height: size, top: '50%', left: '50%',
+                    marginLeft: -size / 2, marginTop: -size / 2,
+                    background: `radial-gradient(circle, rgba(200,220,255,${0.06 - i * 0.012}) 0%, rgba(120,160,255,${0.03 - i * 0.005}) 50%, transparent 70%)`,
+                    border: `1px solid rgba(180,210,255,${0.08 - i * 0.015})`,
+                  }}
+                  animate={{ opacity: [0.5, 0.2, 0.5], scale: [1, 1.08, 1] }}
+                  transition={{ duration: 3, delay: i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
               ))}
 
-              {/* SVG: Gargantua black hole */}
+              {/* White Hole SVG */}
               <button id="are-you-ready-btn" onClick={handleEnter}
-                className="relative cursor-pointer"
-                style={{ background: 'none', border: 'none', padding: 0, width: 320, height: 230 }}
+                className="relative cursor-pointer group"
+                style={{ background: 'none', border: 'none', padding: 0, width: 340, height: 340 }}
               >
-                <svg viewBox="0 0 320 230" width="320" height="230">
+                <svg viewBox="0 0 340 340" width="340" height="340">
                   <defs>
-                    <filter id="bh-glow">
-                      <feGaussianBlur stdDeviation="5" result="b"/>
-                      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                    <filter id="bh-corona"><feGaussianBlur stdDeviation="16"/></filter>
-                    <linearGradient id="disk-g" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="transparent"/>
-                      <stop offset="10%" stopColor="rgba(255,130,30,0.3)"/>
-                      <stop offset="28%" stopColor="rgba(255,195,80,0.85)"/>
-                      <stop offset="50%" stopColor="rgba(255,250,190,1)"/>
-                      <stop offset="72%" stopColor="rgba(255,195,80,0.85)"/>
-                      <stop offset="90%" stopColor="rgba(255,130,30,0.3)"/>
-                      <stop offset="100%" stopColor="transparent"/>
-                    </linearGradient>
-                    <linearGradient id="ring-g" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255,255,220,1)"/>
-                      <stop offset="50%" stopColor="rgba(255,210,130,0.95)"/>
-                      <stop offset="100%" stopColor="rgba(255,150,50,0.75)"/>
-                    </linearGradient>
+                    <filter id="wh-glow"><feGaussianBlur stdDeviation="8" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                    <filter id="wh-outer"><feGaussianBlur stdDeviation="20" /></filter>
+                    <filter id="wh-intense"><feGaussianBlur stdDeviation="12" /></filter>
+                    <radialGradient id="wh-core-g" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="30%" stopColor="rgba(200,225,255,0.95)" />
+                      <stop offset="60%" stopColor="rgba(130,170,255,0.5)" />
+                      <stop offset="100%" stopColor="transparent" />
+                    </radialGradient>
+                    <radialGradient id="wh-ring-g" cx="50%" cy="50%" r="50%">
+                      <stop offset="70%" stopColor="transparent" />
+                      <stop offset="82%" stopColor="rgba(160,200,255,0.6)" />
+                      <stop offset="90%" stopColor="rgba(200,225,255,0.9)" />
+                      <stop offset="95%" stopColor="rgba(255,255,255,1)" />
+                      <stop offset="100%" stopColor="rgba(160,200,255,0.3)" />
+                    </radialGradient>
                   </defs>
-                  {/* Corona outer diffuse */}
-                  <ellipse cx="160" cy="118" rx="155" ry="90" fill="rgba(255,110,20,0.06)" filter="url(#bh-corona)"/>
-                  {/* Back accretion disk */}
-                  <ellipse cx="160" cy="122" rx="152" ry="22" fill="url(#disk-g)" filter="url(#bh-glow)" opacity="0.88"/>
+
+                  {/* Outer diffuse corona */}
+                  <circle cx="170" cy="170" r="160" fill="rgba(140,180,255,0.04)" filter="url(#wh-outer)" />
+                  <circle cx="170" cy="170" r="130" fill="rgba(180,210,255,0.06)" filter="url(#wh-outer)" />
+
+                  {/* Light rays emanating outward */}
+                  {Array.from({ length: 12 }).map((_, i) => {
+                    const angle = (i / 12) * Math.PI * 2;
+                    const x1 = 170 + Math.cos(angle) * 75;
+                    const y1 = 170 + Math.sin(angle) * 75;
+                    const x2 = 170 + Math.cos(angle) * 155;
+                    const y2 = 170 + Math.sin(angle) * 155;
+                    return (
+                      <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                        stroke="rgba(200,225,255,0.12)" strokeWidth="2" filter="url(#wh-glow)" />
+                    );
+                  })}
+
                   {/* Photon ring */}
-                  <circle cx="160" cy="115" r="78" fill="none" stroke="url(#ring-g)" strokeWidth="18" filter="url(#bh-glow)" opacity="0.97"/>
-                  {/* Shadow */}
-                  <circle cx="160" cy="115" r="70" fill="#000000"/>
-                  {/* Front disk */}
-                  <ellipse cx="160" cy="126" rx="152" ry="18" fill="url(#disk-g)" filter="url(#bh-glow)" opacity="0.82">
-                    <clipPath id="front-clip"><rect x="0" y="114" width="320" height="116"/></clipPath>
-                  </ellipse>
-                  {/* Lensing top arc */}
-                  <path d="M 84,115 A 76,76 0 0,1 236,115" fill="none" stroke="rgba(255,250,200,0.45)" strokeWidth="5" filter="url(#bh-glow)"/>
+                  <circle cx="170" cy="170" r="80" fill="url(#wh-ring-g)" filter="url(#wh-glow)" />
+
+                  {/* Bright event horizon edge */}
+                  <circle cx="170" cy="170" r="72" fill="none" stroke="rgba(220,240,255,0.9)"
+                    strokeWidth="3" filter="url(#wh-glow)" />
+
+                  {/* White core — blinding center */}
+                  <circle cx="170" cy="170" r="68" fill="url(#wh-core-g)" />
+
+                  {/* Inner bright spot */}
+                  <circle cx="170" cy="170" r="30" fill="rgba(255,255,255,0.95)" filter="url(#wh-intense)" />
+                  <circle cx="170" cy="170" r="15" fill="#ffffff" />
                 </svg>
 
-                {/* Animated accretion shimmer */}
-                <motion.div className="absolute pointer-events-none"
-                  style={{ top: '47%', left: '5%', right: '5%', height: 18, borderRadius: 9,
-                    background: 'linear-gradient(90deg, transparent, rgba(255,200,80,0.15) 30%, rgba(255,240,160,0.35) 50%, rgba(255,200,80,0.15) 70%, transparent)',
-                    filter: 'blur(3px)' }}
-                  animate={{ opacity: [0.4, 1, 0.4] }}
+                {/* Pulsing glow overlay */}
+                <motion.div className="absolute inset-0 rounded-full pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(200,225,255,0.15) 0%, transparent 60%)',
+                  }}
+                  animate={{ opacity: [0.5, 1, 0.5], scale: [0.95, 1.02, 0.95] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
 
-                {/* Text inside shadow */}
+                {/* Text inside */}
                 <div className="absolute flex flex-col items-center justify-center pointer-events-none"
-                  style={{ top: '22%', left: '50%', transform: 'translateX(-50%)', width: 130 }}>
-                  <span className="text-white/90 font-black text-center leading-tight"
-                    style={{ fontSize: 11, letterSpacing: '0.1em', textShadow: '0 0 8px rgba(255,200,80,0.8)' }}>
+                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 160 }}>
+                  <span className="text-white font-black text-center leading-tight"
+                    style={{ fontSize: 13, letterSpacing: '0.12em', textShadow: '0 0 20px rgba(150,200,255,1), 0 0 40px rgba(100,150,255,0.5)' }}>
                     ARE YOU READY<br />TO GO BEYOND?
                   </span>
-                  <span className="text-white/40 text-center mt-1" style={{ fontSize: 7.5, letterSpacing: '0.15em' }}>
-                    CLICK TO ENTER
-                  </span>
+                  <motion.span
+                    className="text-white/60 text-center mt-2"
+                    style={{ fontSize: 8, letterSpacing: '0.2em' }}
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.8, repeat: Infinity }}
+                  >
+                    ▶ CLICK TO ENTER HYPERSPACE
+                  </motion.span>
                 </div>
               </button>
 
               {/* Subtitle */}
               <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                className="mt-3 text-white/35 text-xs tracking-[0.3em] uppercase animate-pulse">
-                travelling to the white hole
+                className="mt-4 text-blue-200/40 text-xs tracking-[0.3em] uppercase">
+                approaching the white hole
               </motion.p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
 
       {/* Warp Controls */}
       <div className="fixed bottom-6 inset-x-0 z-20 flex justify-center">
@@ -245,7 +378,7 @@ export default function SpaceBackground() {
           </button>
           <span
             className="text-sm tracking-wide font-mono"
-            style={warp === 10 ? { color: '#818cf8', textShadow: '0 0 12px #818cf8' } : {}}
+            style={warp === 10 ? { color: '#93c5fd', textShadow: '0 0 12px #93c5fd' } : {}}
           >
             WARP {warp}
           </span>
