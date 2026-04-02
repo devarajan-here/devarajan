@@ -116,106 +116,133 @@ export default function SpaceBackground() {
           >
             <div className="relative pointer-events-auto flex flex-col items-center">
 
-              {/* ── White-hole gravitational rings ── */}
-              {[1, 1.6, 2.3, 3.1].map((scale, i) => (
+              {/* ── Outer blinding white-hole aura pulses ── */}
+              {[280, 340, 420].map((size, i) => (
                 <motion.div
                   key={i}
-                  className="absolute rounded-full border border-white pointer-events-none"
-                  style={{ width: 160, height: 160, top: '50%', left: '50%', marginLeft: -80, marginTop: -80 }}
-                  animate={{ scale: [scale, scale + 0.18, scale], opacity: [0.18 - i * 0.03, 0.05, 0.18 - i * 0.03] }}
-                  transition={{ duration: 2.4, delay: i * 0.35, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: size, height: size,
+                    top: '50%', left: '50%',
+                    marginLeft: -size / 2, marginTop: -size / 2,
+                    background: `radial-gradient(circle, rgba(255,255,255,${0.12 - i * 0.03}) 0%, transparent 70%)`,
+                  }}
+                  animate={{ scale: [1, 1.12, 1], opacity: [0.7, 0.2, 0.7] }}
+                  transition={{ duration: 2.2, delay: i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
               ))}
 
-              {/* ── Outer blinding white aura ── */}
-              <motion.div
-                className="absolute rounded-full pointer-events-none"
-                style={{ width: 260, height: 260, top: '50%', left: '50%', marginLeft: -130, marginTop: -130 }}
-                animate={{ opacity: [0.12, 0.28, 0.12], scale: [1, 1.08, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                style2={{ background: 'radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 45%, transparent 72%)' }}
-              />
-
-              {/* ── The globe itself ── */}
+              {/* ── The wormhole globe ── */}
               <motion.button
                 id="are-you-ready-btn"
                 onMouseEnter={handleBtnHover}
                 onClick={() => navigate('/nebula')}
-                whileHover={{ scale: 1.08 }}
+                whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.93 }}
                 className="relative flex items-center justify-center cursor-pointer select-none overflow-hidden"
                 style={{
-                  width: 160,
-                  height: 160,
+                  width: 200,
+                  height: 200,
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle at 38% 35%, #ffffff 0%, #e0e0e0 55%, #b0b0b0 100%)',
+                  background: 'radial-gradient(circle at 38% 35%, #ffffff 0%, #d8d8d8 45%, #aaaaaa 100%)',
                   boxShadow: `
-                    0 0 0 2px rgba(255,255,255,0.6),
-                    0 0 30px rgba(255,255,255,0.9),
-                    0 0 80px rgba(255,255,255,0.5),
-                    0 0 160px rgba(255,255,255,0.25),
-                    inset 0 0 30px rgba(0,0,0,0.08),
-                    inset -4px -6px 16px rgba(0,0,0,0.12)
+                    0 0 0 2px rgba(255,255,255,0.8),
+                    0 0 40px rgba(255,255,255,1),
+                    0 0 100px rgba(255,255,255,0.6),
+                    0 0 200px rgba(255,255,255,0.3),
+                    inset -5px -8px 20px rgba(0,0,0,0.15)
                   `,
-                  border: '2px solid rgba(255,255,255,0.9)',
+                  border: '2px solid rgba(255,255,255,0.95)',
                 }}
               >
-                {/* Globe latitude lines */}
-                <svg className="absolute inset-0 w-full h-full opacity-25" viewBox="0 0 160 160">
-                  {/* Horizontal arcs */}
-                  <ellipse cx="80" cy="54" rx="58" ry="14" fill="none" stroke="black" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="80" rx="76" ry="18" fill="none" stroke="black" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="106" rx="58" ry="14" fill="none" stroke="black" strokeWidth="0.8"/>
-                  {/* Vertical arc */}
-                  <ellipse cx="80" cy="80" rx="18" ry="76" fill="none" stroke="black" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="80" rx="44" ry="76" fill="none" stroke="black" strokeWidth="0.8"/>
+                {/* ── Wormhole tunnel: concentric dark rings shrinking to centre ── */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" style={{ borderRadius: '50%' }}>
+                  {/* Tunnel rings — biggest to smallest, getting darker toward centre */}
+                  {[88, 72, 56, 42, 30, 20, 12, 6].map((r, i) => (
+                    <ellipse
+                      key={r}
+                      cx="100" cy="105"
+                      rx={r}
+                      ry={r * 0.38}
+                      fill="none"
+                      stroke="black"
+                      strokeWidth={0.6 + i * 0.15}
+                      strokeOpacity={0.12 + i * 0.06}
+                    />
+                  ))}
+                  {/* Dark tunnel throat */}
+                  <ellipse cx="100" cy="105" rx="5" ry="2" fill="black" fillOpacity="0.55" />
+                  {/* Blinding white-hole light at the tunnel end */}
+                  <radialGradient id="wh-light" cx="50%" cy="52%" r="12%">
+                    <stop offset="0%" stopColor="white" stopOpacity="1" />
+                    <stop offset="60%" stopColor="white" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="white" stopOpacity="0" />
+                  </radialGradient>
+                  <ellipse cx="100" cy="105" rx="16" ry="7" fill="url(#wh-light)" />
+                  {/* Globe latitude lines */}
+                  <ellipse cx="100" cy="68" rx="72" ry="17" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
+                  <ellipse cx="100" cy="100" rx="95" ry="22" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
+                  <ellipse cx="100" cy="132" rx="72" ry="17" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
+                  <ellipse cx="100" cy="100" rx="22" ry="95" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
+                  <ellipse cx="100" cy="100" rx="55" ry="95" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
                 </svg>
 
-                {/* Bright top-left specular highlight — gives the sphere illusion */}
+                {/* Animated tunnel-inward shimmer rings */}
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      width: 200, height: 200,
+                      top: 0, left: 0,
+                      background: 'none',
+                      border: '1px solid rgba(0,0,0,0.08)',
+                    }}
+                    animate={{ scale: [1.0, 0.05], opacity: [0, 0.35, 0] }}
+                    transition={{
+                      duration: 2.0,
+                      delay: i * 0.65,
+                      repeat: Infinity,
+                      ease: 'easeIn',
+                    }}
+                  />
+                ))}
+
+                {/* Specular highlight */}
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 55, height: 42, borderRadius: '50%',
-                    top: 18, left: 24,
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 80%)',
+                    width: 65, height: 50, borderRadius: '50%',
+                    top: 20, left: 26,
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, transparent 75%)',
                     transform: 'rotate(-20deg)',
-                    filter: 'blur(8px)',
+                    filter: 'blur(9px)',
                   }}
                 />
 
-                {/* Shimmer sweep */}
-                <motion.div
-                  className="absolute inset-0"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-                  style={{
-                    background: 'conic-gradient(from 0deg, transparent 75%, rgba(0,0,0,0.06) 90%, transparent 100%)',
-                    borderRadius: '50%',
-                  }}
-                />
-
-                {/* Text */}
+                {/* Text — above the tunnel */}
                 <span
-                  className="relative z-10 text-black font-bold text-center leading-tight tracking-wider"
-                  style={{ fontSize: 13 }}
+                  className="absolute z-10 text-black font-black text-center leading-tight"
+                  style={{ fontSize: 11, top: 22, width: '75%', letterSpacing: '0.08em' }}
                 >
-                  ARE YOU<br />READY?
+                  ARE YOU READY<br />TO GO BEYOND?
                 </span>
               </motion.button>
 
-              {/* Subtitle hint */}
+              {/* Subtitle */}
               <motion.p
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="mt-5 text-white/40 text-xs tracking-[0.25em] uppercase animate-pulse"
+                transition={{ delay: 0.7 }}
+                className="mt-5 text-white/45 text-xs tracking-[0.3em] uppercase animate-pulse"
               >
-                Enter the white hole
+                travelling to the white hole
               </motion.p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {/* Warp Controls */}
       <div className="fixed bottom-6 inset-x-0 z-20 flex justify-center">
