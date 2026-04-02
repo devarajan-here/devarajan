@@ -29,7 +29,7 @@ const MODULES = [
     border: 'border-cyan-500/30',
     badge: 'bg-cyan-500/20 text-cyan-300',
     title: 'SOC Tools & Platforms',
-    subtitle: 'The analyst's toolkit',
+    subtitle: "The analyst's toolkit",
     topics: [
       'SIEM deep-dive: Splunk, Wazuh, QRadar',
       'Log ingestion, parsing, and correlation rules',
