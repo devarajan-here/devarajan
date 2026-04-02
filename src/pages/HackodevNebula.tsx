@@ -9,9 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 function MouseOrbitCamera() {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
-  const radius = useRef(30);
-  const RADIUS_MIN = 10;
-  const RADIUS_MAX = 60;
+  const radius = useRef(38);
+  const RADIUS_MIN = 5;
+  const RADIUS_MAX = 80;
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -20,7 +20,7 @@ function MouseOrbitCamera() {
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      radius.current = Math.max(RADIUS_MIN, Math.min(RADIUS_MAX, radius.current + e.deltaY * 0.04));
+      radius.current = Math.max(RADIUS_MIN, Math.min(RADIUS_MAX, radius.current + e.deltaY * 0.06));
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('wheel', onWheel, { passive: false });
@@ -59,85 +59,170 @@ interface GalaxyProps {
 
 function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver, onPointerOut }: GalaxyProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const coreRef = useRef<THREE.Mesh>(null);
   const scaleVec = useMemo(() => new THREE.Vector3(), []);
+  const baseColor = useMemo(() => new THREE.Color(color), [color]);
 
-  const { positions, colors } = useMemo(() => {
-    const count = 3200;
+  // Main spiral particles — 4 arms, 8000 stars, radius 14
+  const { positions: mainPos, colors: mainCol, sizes } = useMemo(() => {
+    const count = 8000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
-    const base = new THREE.Color(color);
+    const sizes = new Float32Array(count);
+    const white = new THREE.Color('#ffffff');
     for (let i = 0; i < count; i++) {
-      const arm = Math.floor(Math.random() * 3);
-      const armAngle = (arm / 3) * Math.PI * 2;
-      const radius = Math.pow(Math.random(), 0.5) * 7;
-      const spin = radius * 1.4;
-      const angle = armAngle + spin + (Math.random() - 0.5) * 0.7;
-      const spread = (1 - radius / 8) * 0.6;
-      positions[i * 3] = Math.cos(angle) * radius + (Math.random() - 0.5) * spread;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.4;
-      positions[i * 3 + 2] = Math.sin(angle) * radius + (Math.random() - 0.5) * spread;
-      const b = 0.55 + Math.random() * 0.45;
-      colors[i * 3] = base.r * b;
-      colors[i * 3 + 1] = base.g * b;
-      colors[i * 3 + 2] = base.b * b;
+      const arm = Math.floor(Math.random() * 4);
+      const armAngle = (arm / 4) * Math.PI * 2;
+      const r = Math.pow(Math.random(), 0.6) * 14;
+      const spin = r * 1.2;
+      const angle = armAngle + spin + (Math.random() - 0.5) * (0.5 + r * 0.04);
+      const spread = Math.max(0.1, (1 - r / 16)) * 0.9;
+      positions[i * 3] = Math.cos(angle) * r + (Math.random() - 0.5) * spread;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.35;
+      positions[i * 3 + 2] = Math.sin(angle) * r + (Math.random() - 0.5) * spread;
+      // Color: bright white at core, colored at edges
+      const coreFade = Math.max(0, 1 - r / 5);
+      const b = 0.6 + Math.random() * 0.4;
+      const mixed = baseColor.clone().lerp(white, coreFade * 0.7);
+      colors[i * 3] = mixed.r * b;
+      colors[i * 3 + 1] = mixed.g * b;
+      colors[i * 3 + 2] = mixed.b * b;
+      // Bigger particles near core
+      sizes[i] = (0.03 + coreFade * 0.06 + Math.random() * 0.02) * (hovered ? 1.4 : 1);
+    }
+    return { positions, colors, sizes };
+  }, [baseColor, hovered]);
+
+  // Outer dust halo
+  const { positions: dustPos, colors: dustCol } = useMemo(() => {
+    const count = 2000;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = 3 + Math.random() * 16;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * 0.5;
+      positions[i * 3] = Math.cos(theta) * r * Math.cos(phi);
+      positions[i * 3 + 1] = Math.sin(phi) * r * 0.15;
+      positions[i * 3 + 2] = Math.sin(theta) * r * Math.cos(phi);
+      const b = 0.3 + Math.random() * 0.3;
+      colors[i * 3] = baseColor.r * b;
+      colors[i * 3 + 1] = baseColor.g * b;
+      colors[i * 3 + 2] = baseColor.b * b;
     }
     return { positions, colors };
-  }, [color]);
+  }, [baseColor]);
 
-  const geo = useMemo(() => {
+  const mainGeo = useMemo(() => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    g.setAttribute('position', new THREE.BufferAttribute(mainPos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(mainCol, 3));
     return g;
-  }, [positions, colors]);
+  }, [mainPos, mainCol]);
 
-  const mat = useMemo(() => new THREE.PointsMaterial({
-    size: hovered ? 0.055 : 0.038,
+  const mainMat = useMemo(() => new THREE.PointsMaterial({
+    size: hovered ? 0.08 : 0.055,
     vertexColors: true,
     transparent: true,
-    opacity: hovered ? 1 : 0.88,
+    opacity: hovered ? 1 : 0.92,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
   }), [hovered]);
 
-  useFrame((_, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * (hovered ? 0.35 : 0.12);
-      const s = hovered ? 1.2 : 1;
-      groupRef.current.scale.lerp(scaleVec.set(s, s, s), 0.08);
-    }
-  });
+  const dustGeo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(dustCol, 3));
+    return g;
+  }, [dustPos, dustCol]);
 
-  const ringGeo = useMemo(() => new THREE.RingGeometry(7.5, 8.5, 64), []);
+  const dustMat = useMemo(() => new THREE.PointsMaterial({
+    size: 0.12,
+    vertexColors: true,
+    transparent: true,
+    opacity: hovered ? 0.35 : 0.18,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  }), [hovered]);
+
+  // Glowing core texture
+  const coreTex = useMemo(() => {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0, `rgba(255,255,255,0.9)`);
+    g.addColorStop(0.15, color.replace('#', 'rgba(') ? `${color}cc` : 'rgba(100,150,255,0.8)');
+    g.addColorStop(0.5, `${color}44`);
+    g.addColorStop(1, `${color}00`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    return new THREE.CanvasTexture(c);
+  }, [color]);
+
+  const ringGeo = useMemo(() => new THREE.RingGeometry(14, 15.5, 80), []);
   const ringMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity: hovered ? 0.3 : 0.08,
+    color, transparent: true, opacity: hovered ? 0.25 : 0.06,
     side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
   }), [color, hovered]);
+
+  useFrame((_, delta) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * (hovered ? 0.3 : 0.1);
+      const s = hovered ? 1.15 : 1;
+      groupRef.current.scale.lerp(scaleVec.set(s, s, s), 0.06);
+    }
+    if (coreRef.current) {
+      const p = 1 + Math.sin(Date.now() * 0.002) * 0.08;
+      coreRef.current.scale.set(p, p, p);
+    }
+  });
 
   return (
     <group position={position}>
       <group ref={groupRef} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
-        <points geometry={geo} material={mat} />
+        {/* Main spiral stars */}
+        <points geometry={mainGeo} material={mainMat} />
+        {/* Dust halo */}
+        <points geometry={dustGeo} material={dustMat} />
+        {/* Glowing core */}
+        <mesh ref={coreRef}>
+          <sphereGeometry args={[1.8, 32, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.45}
+            blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+        {/* Core glow plane */}
+        <mesh rotation={[0, 0, 0]}>
+          <planeGeometry args={[12, 12]} />
+          <meshBasicMaterial map={coreTex} transparent depthWrite={false}
+            blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+            opacity={hovered ? 0.8 : 0.5} />
+        </mesh>
+        {/* Outer ring */}
         <mesh geometry={ringGeo} material={ringMat} rotation={[Math.PI / 2, 0, 0]} />
+        {/* Clickable hitbox */}
         <mesh>
-          <sphereGeometry args={[8, 12, 12]} />
+          <sphereGeometry args={[15, 12, 12]} />
           <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       </group>
       <Billboard follow>
-        <Text position={[0, -9.5, 0]} fontSize={hovered ? 0.9 : 0.7} color={color}
-          anchorX="center" anchorY="middle" fillOpacity={hovered ? 1 : 0.7}>
+        <Text position={[0, -17, 0]} fontSize={hovered ? 1.4 : 1.1} color={color}
+          anchorX="center" anchorY="middle" fillOpacity={hovered ? 1 : 0.75}
+          outlineWidth={0.04} outlineColor="#000000">
           {name}
         </Text>
         {hovered && (
-          <Text position={[0, -10.6, 0]} fontSize={0.4} color="#ffffff"
-            anchorX="center" anchorY="middle" fillOpacity={0.55}>
+          <Text position={[0, -18.8, 0]} fontSize={0.6} color="#ffffff"
+            anchorX="center" anchorY="middle" fillOpacity={0.6}>
             Click to explore
           </Text>
         )}
       </Billboard>
-      {hovered && <pointLight color={color} intensity={6} distance={18} decay={2} />}
+      {/* Ambient glow light */}
+      <pointLight color={color} intensity={hovered ? 12 : 3} distance={hovered ? 30 : 20} decay={2} />
     </group>
   );
 }
@@ -146,7 +231,7 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
 function NebulaDust() {
   const ref = useRef<THREE.Points>(null);
   const { positions, colors } = useMemo(() => {
-    const count = 900;
+    const count = 1500;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const palette = [
@@ -154,11 +239,11 @@ function NebulaDust() {
       new THREE.Color('#2563eb'), new THREE.Color('#0ea5e9'), new THREE.Color('#6d28d9'),
     ];
     for (let i = 0; i < count; i++) {
-      const r = 12 + Math.random() * 28;
+      const r = 15 + Math.random() * 50;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.45;
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.4;
       positions[i * 3 + 2] = r * Math.cos(phi);
       const c = palette[Math.floor(Math.random() * palette.length)];
       colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
@@ -173,11 +258,11 @@ function NebulaDust() {
     return g;
   }, [positions, colors]);
 
-  useFrame((_, d) => { if (ref.current) ref.current.rotation.y += d * 0.015; });
+  useFrame((_, d) => { if (ref.current) ref.current.rotation.y += d * 0.012; });
 
   return (
     <points ref={ref} geometry={geo}>
-      <pointsMaterial vertexColors size={0.1} transparent opacity={0.45}
+      <pointsMaterial vertexColors size={0.15} transparent opacity={0.4}
         blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
     </points>
   );
@@ -185,11 +270,11 @@ function NebulaDust() {
 
 // ── Galaxies — spread far apart ───────────────────────────────────────────
 const GALAXIES = [
-  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-28,  5,  3] as [number,number,number], route: '/nebula/blue-team' },
-  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 26, -6,-10] as [number,number,number], route: null },
-  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  3, 14,-30] as [number,number,number], route: null },
-  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-15,-14,-24] as [number,number,number], route: null },
-  { id: 'malware',      name: 'Malware Analytics',     color: '#10b981', position: [ 30,  9, 12] as [number,number,number], route: null },
+  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-38,  6,  4] as [number,number,number], route: '/nebula/blue-team' },
+  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 35, -8,-14] as [number,number,number], route: null },
+  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  4, 18,-40] as [number,number,number], route: null },
+  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-20,-18,-32] as [number,number,number], route: null },
+  { id: 'malware',      name: 'Malware Analytics',     color: '#10b981', position: [ 40, 12, 16] as [number,number,number], route: null },
 ];
 
 // ── Main page ─────────────────────────────────────────────────────────────
@@ -231,10 +316,10 @@ export default function HackodevNebula() {
       </motion.button>
 
       {/* 3D Canvas */}
-      <Canvas camera={{ position: [0, 4, 22], fov: 65 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: [0, 6, 38], fov: 65 }} gl={{ antialias: true }}>
         <color attach="background" args={['#00000d']} />
-        <fog attach="fog" args={['#00000d', 50, 90]} />
-        <Stars radius={100} depth={70} count={8000} factor={5} saturation={0.2} fade speed={0.4} />
+        <fog attach="fog" args={['#00000d', 65, 120]} />
+        <Stars radius={150} depth={100} count={12000} factor={6} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
         <MouseOrbitCamera />
         <ambientLight intensity={0.1} />
