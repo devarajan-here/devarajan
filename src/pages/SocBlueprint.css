@@ -1,0 +1,307 @@
+/* SOC Blueprint Styles */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap');
+
+.soc-blueprint {
+  --bg: #040810;
+  --panel: #080f1c;
+  --border: #0d2340;
+  --accent: #00d4ff;
+  --accent2: #ff6b35;
+  --accent3: #00ff88;
+  --warn: #ffcc00;
+  --red: #ff3366;
+  --text: #c8e0f0;
+  --dim: #4a6a80;
+  --glow: 0 0 20px rgba(0,212,255,0.3);
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.soc-blueprint::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.soc-blueprint .scanline {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.4;
+  animation: socScan 4s linear infinite;
+  pointer-events: none;
+  z-index: 999;
+}
+
+@keyframes socScan {
+  from { top: -2px; }
+  to { top: 100vh; }
+}
+
+.soc-blueprint .soc-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.soc-blueprint header {
+  text-align: center;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.soc-blueprint header::after {
+  content: '';
+  display: block;
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: 20px auto 0;
+}
+
+.soc-blueprint .header-tag {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  opacity: 0.7;
+}
+
+.soc-blueprint h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(24px, 5vw, 52px);
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  line-height: 1.1;
+}
+
+.soc-blueprint h1 span { color: var(--accent); display: block; }
+
+.soc-blueprint .subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--dim);
+  font-size: 13px;
+  margin-top: 12px;
+  letter-spacing: 2px;
+}
+
+/* Back button */
+.soc-blueprint .back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.soc-blueprint .back-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* Section titles */
+.soc-blueprint .section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.soc-blueprint .section-title::before { content: ''; width: 30px; height: 2px; background: var(--accent); }
+.soc-blueprint .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Tabs */
+.soc-blueprint .tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  padding-bottom: 1px;
+}
+
+.soc-blueprint .tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  cursor: pointer;
+  color: var(--dim);
+  border: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  background: none;
+}
+.soc-blueprint .tab:hover { color: var(--accent); }
+.soc-blueprint .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Cards */
+.soc-blueprint .card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 20px;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.soc-blueprint .card:hover { border-color: var(--accent); box-shadow: var(--glow); }
+.soc-blueprint .card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; }
+.soc-blueprint .card.blue::before { background: var(--accent); }
+.soc-blueprint .card.orange::before { background: var(--accent2); }
+.soc-blueprint .card.green::before { background: var(--accent3); }
+.soc-blueprint .card.yellow::before { background: var(--warn); }
+.soc-blueprint .card.red::before { background: var(--red); }
+
+.soc-blueprint .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+.soc-blueprint .card-icon { font-size: 22px; line-height: 1; }
+.soc-blueprint .card-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 1px; flex: 1; }
+
+.soc-blueprint .badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border: 1px solid;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.soc-blueprint .badge-blue { color: var(--accent); border-color: var(--accent); }
+.soc-blueprint .badge-orange { color: var(--accent2); border-color: var(--accent2); }
+.soc-blueprint .badge-green { color: var(--accent3); border-color: var(--accent3); }
+.soc-blueprint .badge-red { color: var(--red); border-color: var(--red); }
+.soc-blueprint .badge-yellow { color: var(--warn); border-color: var(--warn); }
+
+.soc-blueprint .card p { font-size: 14px; color: #8aa8c0; line-height: 1.6; margin-bottom: 12px; }
+
+.soc-blueprint .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.soc-blueprint .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  background: rgba(0,212,255,0.06);
+  border: 1px solid rgba(0,212,255,0.2);
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+.soc-blueprint .tag.orange { background: rgba(255,107,53,0.06); border-color: rgba(255,107,53,0.2); color: var(--accent2); }
+.soc-blueprint .tag.green { background: rgba(0,255,136,0.06); border-color: rgba(0,255,136,0.2); color: var(--accent3); }
+
+/* Grids */
+.soc-blueprint .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.soc-blueprint .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.soc-blueprint .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+/* Architecture layers */
+.soc-blueprint .arch-layer {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 16px 20px;
+}
+.soc-blueprint .arch-layer + .arch-layer { border-top: none; }
+.soc-blueprint .layer-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-bottom: 10px; }
+.soc-blueprint .layer-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.soc-blueprint .layer-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 6px 12px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+.soc-blueprint .layer-item:hover { opacity: 0.8; transform: translateY(-1px); }
+
+/* Metrics */
+.soc-blueprint .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 30px; }
+.soc-blueprint .metric { background: var(--panel); border: 1px solid var(--border); padding: 16px; text-align: center; }
+.soc-blueprint .metric-val { font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 900; color: var(--accent); display: block; }
+.soc-blueprint .metric-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--dim); letter-spacing: 1px; margin-top: 4px; text-transform: uppercase; }
+
+/* Tiers */
+.soc-blueprint .tier-block { border: 1px solid var(--border); margin-bottom: 16px; overflow: hidden; }
+.soc-blueprint .tier-header { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.soc-blueprint .tier-num { font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 900; opacity: 0.3; line-height: 1; }
+.soc-blueprint .tier-info h3 { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.soc-blueprint .tier-info p { font-size: 12px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+.soc-blueprint .tier-body { padding: 16px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.soc-blueprint .tier-col h4 { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+.soc-blueprint .tier-col ul { list-style: none; padding: 0; }
+.soc-blueprint .tier-col ul li { font-size: 13px; color: #8aa8c0; padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
+.soc-blueprint .tier-col ul li::before { content: '›'; color: var(--accent); flex-shrink: 0; }
+
+/* Person cards */
+.soc-blueprint .person-card { background: var(--panel); border: 1px solid var(--border); padding: 18px; transition: all 0.2s; }
+.soc-blueprint .person-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--glow); }
+.soc-blueprint .person-role { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 1px; margin-bottom: 4px; }
+.soc-blueprint .person-level { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase; }
+.soc-blueprint .person-card p { font-size: 13px; color: #7090a8; line-height: 1.6; margin-bottom: 10px; }
+.soc-blueprint .resp-list { list-style: none; border-top: 1px solid var(--border); padding: 10px 0 0 0; }
+.soc-blueprint .resp-list li { font-size: 12px; color: #6080a0; padding: 2px 0; display: flex; gap: 6px; }
+.soc-blueprint .resp-list li::before { content: '·'; color: var(--accent); }
+
+/* Tool table */
+.soc-blueprint .tool-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.soc-blueprint .tool-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); background: rgba(0,212,255,0.03); }
+.soc-blueprint .tool-table td { padding: 10px 14px; border-bottom: 1px solid rgba(13,35,64,0.5); color: #8aa8c0; vertical-align: top; }
+.soc-blueprint .tool-table tr:hover td { background: rgba(0,212,255,0.03); }
+.soc-blueprint .tool-name { font-family: 'Inter', sans-serif; font-size: 11px; color: #fff; font-weight: 700; }
+
+/* Phases */
+.soc-blueprint .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; border: 1px solid var(--border); overflow: hidden; margin-bottom: 30px; }
+.soc-blueprint .phase { padding: 20px; border-right: 1px solid var(--border); position: relative; }
+.soc-blueprint .phase:last-child { border-right: none; }
+.soc-blueprint .phase-num { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 900; color: var(--accent); opacity: 0.15; position: absolute; top: 10px; right: 14px; }
+.soc-blueprint .phase h4 { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #fff; margin-bottom: 6px; letter-spacing: 1px; }
+.soc-blueprint .phase-time { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); margin-bottom: 12px; letter-spacing: 1px; }
+.soc-blueprint .phase ul { list-style: none; padding: 0; }
+.soc-blueprint .phase ul li { font-size: 12px; color: #6080a0; padding: 2px 0; }
+.soc-blueprint .phase ul li::before { content: '— '; color: var(--dim); }
+
+/* Checklist */
+.soc-blueprint .checklist { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; padding: 0; }
+.soc-blueprint .checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--border); font-size: 13px; color: #8aa8c0; }
+.soc-blueprint .check-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+/* Animations */
+@keyframes socFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.soc-blueprint .tab-content.active > * { animation: socFadeIn 0.3s ease forwards; }
+
+@media (max-width: 600px) {
+  .soc-blueprint .tabs { gap: 0; }
+  .soc-blueprint .tab { padding: 8px 12px; font-size: 10px; }
+  .soc-blueprint .phases { grid-template-columns: 1fr; }
+  .soc-blueprint .phase { border-right: none; border-bottom: 1px solid var(--border); }
+}
