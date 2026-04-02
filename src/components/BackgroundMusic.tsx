@@ -2,7 +2,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export function BackgroundMusic() {
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -12,13 +12,26 @@ export function BackgroundMusic() {
       audioRef.current.loop = true; // Loop the music
 
       if (!isMuted) {
-        // Play audio with user interaction
+        // Try playing immediately
         audioRef.current.play().catch((error) => {
-          console.log("Audio play failed:", error);
+          console.log("Autoplay blocked. Will play on first click.");
         });
       } else {
         audioRef.current.pause();
       }
+      
+      // Browser Autoplay Policy workaround: Play the music on the first click anywhere on the screen
+      const handleGlobalClick = () => {
+        if (!isMuted && audioRef.current && audioRef.current.paused) {
+          audioRef.current.play().catch(() => {});
+        }
+        // Remove listener after first successful click
+        document.removeEventListener("click", handleGlobalClick);
+      };
+      
+      document.addEventListener("click", handleGlobalClick);
+
+      return () => document.removeEventListener("click", handleGlobalClick);
     }
   }, [isMuted]);
 
@@ -47,11 +60,6 @@ export function BackgroundMusic() {
         ) : (
           <Volume2 className="w-6 h-6 animate-bounce" />
         )}
-
-        {/* Tooltip */}
-        <span className="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-black/80 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-          {isMuted ? "Play Music 🎵" : "Pause Music"}
-        </span>
       </button>
     </>
   );
