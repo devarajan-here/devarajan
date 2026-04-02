@@ -338,21 +338,62 @@ export default function SpaceBackground() {
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
 
-                {/* Text inside */}
+                {/* Text inside — dark with star shimmer */}
                 <div className="absolute flex flex-col items-center justify-center pointer-events-none"
-                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 160 }}>
-                  <span className="text-white font-black text-center leading-tight"
-                    style={{ fontSize: 13, letterSpacing: '0.12em', textShadow: '0 0 20px rgba(150,200,255,1), 0 0 40px rgba(100,150,255,0.5)' }}>
+                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 170 }}>
+                  {/* Shimmer CSS */}
+                  <style>{`
+                    @keyframes starShimmer {
+                      0% { background-position: -200% center; }
+                      100% { background-position: 200% center; }
+                    }
+                    .shimmer-text {
+                      background: linear-gradient(
+                        105deg,
+                        #1a1a3a 0%,
+                        #1a1a3a 35%,
+                        #ffffff 42%,
+                        #c0d8ff 45%,
+                        #ffffff 48%,
+                        #1a1a3a 55%,
+                        #1a1a3a 100%
+                      );
+                      background-size: 200% 100%;
+                      -webkit-background-clip: text;
+                      background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      animation: starShimmer 3s ease-in-out infinite;
+                    }
+                    .shimmer-text-sub {
+                      background: linear-gradient(
+                        105deg,
+                        rgba(150,180,220,0.4) 0%,
+                        rgba(150,180,220,0.4) 30%,
+                        rgba(255,255,255,0.9) 45%,
+                        rgba(200,220,255,0.8) 50%,
+                        rgba(150,180,220,0.4) 60%,
+                        rgba(150,180,220,0.4) 100%
+                      );
+                      background-size: 200% 100%;
+                      -webkit-background-clip: text;
+                      background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      animation: starShimmer 3s ease-in-out infinite;
+                      animation-delay: 0.5s;
+                    }
+                  `}</style>
+                  <span className="shimmer-text font-black text-center leading-tight"
+                    style={{
+                      fontSize: 14,
+                      letterSpacing: '0.14em',
+                      filter: 'drop-shadow(0 0 6px rgba(180,210,255,0.6)) drop-shadow(0 0 20px rgba(100,150,255,0.3))',
+                    }}>
                     ARE YOU READY<br />TO GO BEYOND?
                   </span>
-                  <motion.span
-                    className="text-white/60 text-center mt-2"
-                    style={{ fontSize: 8, letterSpacing: '0.2em' }}
-                    animate={{ opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.8, repeat: Infinity }}
-                  >
+                  <span className="shimmer-text-sub text-center mt-2 font-semibold"
+                    style={{ fontSize: 8, letterSpacing: '0.2em' }}>
                     ▶ CLICK TO ENTER HYPERSPACE
-                  </motion.span>
+                  </span>
                 </div>
               </button>
 
