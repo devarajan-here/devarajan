@@ -14,8 +14,13 @@ export default function SpaceBackground() {
   const starsRef = useRef<Star[]>([]);
   const speedRef = useRef(0.5);
   const [warp, setWarp] = useState<number>(1);
-  const [btnJumped, setBtnJumped] = useState(false);
+  const [entering, setEntering] = useState(false);
   const navigate = useNavigate();
+
+  const handleEnter = () => {
+    setEntering(true);
+    setTimeout(() => navigate('/nebula'), 2400);
+  };
 
   useEffect(() => {
     speedRef.current = 0.5 * warp;
@@ -86,14 +91,7 @@ export default function SpaceBackground() {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
-  // Random jump position so the button "escapes" to a new spot
-  const [jumpPos, setJumpPos] = useState({ x: 0, y: 0 });
-  const handleBtnHover = () => {
-    if (!btnJumped) return;
-    const x = (Math.random() - 0.5) * 300;
-    const y = (Math.random() - 0.5) * 200;
-    setJumpPos({ x, y });
-  };
+
 
   return (
     <>
@@ -103,139 +101,130 @@ export default function SpaceBackground() {
         style={{ background: 'black' }}
       />
 
-      {/* "Are you ready?" button — appears when warp = 10 */}
+      {/* ── Entering flash animation ── */}
       <AnimatePresence>
-        {warp === 10 && (
-          <motion.div
-            key="ready-btn-wrapper"
-            initial={{ opacity: 0, scale: 0.2 }}
-            animate={{ opacity: 1, scale: 1, x: jumpPos.x, y: jumpPos.y }}
+        {entering && (
+          <motion.div key="entering" className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black">
+            {/* Radial beams pulling inward */}
+            {Array.from({ length: 16 }).map((_, i) => (
+              <motion.div key={i} className="absolute"
+                style={{
+                  width: 3, height: '60vmax', top: '50%', left: '50%',
+                  transformOrigin: 'top center',
+                  transform: `rotate(${i * 22.5}deg)`,
+                  background: 'linear-gradient(to bottom, rgba(255,200,80,0.6), transparent)',
+                  filter: 'blur(2px)',
+                }}
+                animate={{ scaleY: [0, 1, 0], opacity: [0, 0.8, 0] }}
+                transition={{ duration: 1.4, delay: i * 0.04, ease: 'easeIn' }}
+              />
+            ))}
+            {/* Contracting rings */}
+            {[500, 380, 260, 150, 60].map((size, i) => (
+              <motion.div key={size} className="absolute rounded-full border border-white/30"
+                style={{ width: size, height: size }}
+                animate={{ scale: [1, 0], opacity: [0.6, 0] }}
+                transition={{ duration: 1.2, delay: i * 0.1, ease: 'easeIn' }}
+              />
+            ))}
+            {/* White flash */}
+            <motion.div className="absolute inset-0 bg-white"
+              animate={{ opacity: [0, 0, 1] }}
+              transition={{ duration: 2.4, times: [0, 0.7, 1], ease: 'easeIn' }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Gargantua black hole — appears when warp = 10 ── */}
+      <AnimatePresence>
+        {warp === 10 && !entering && (
+          <motion.div key="bh-wrapper"
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 20 }}
             className="fixed inset-0 z-30 flex items-center justify-center pointer-events-none"
           >
             <div className="relative pointer-events-auto flex flex-col items-center">
-
-              {/* ── Outer blinding white-hole aura pulses ── */}
-              {[280, 340, 420].map((size, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute rounded-full pointer-events-none"
-                  style={{
-                    width: size, height: size,
-                    top: '50%', left: '50%',
-                    marginLeft: -size / 2, marginTop: -size / 2,
-                    background: `radial-gradient(circle, rgba(255,255,255,${0.12 - i * 0.03}) 0%, transparent 70%)`,
-                  }}
-                  animate={{ scale: [1, 1.12, 1], opacity: [0.7, 0.2, 0.7] }}
-                  transition={{ duration: 2.2, delay: i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
+              {/* Outer gravitational glow */}
+              {[420, 340, 270].map((size, i) => (
+                <motion.div key={i} className="absolute rounded-full pointer-events-none"
+                  style={{ width: size, height: size, top: '50%', left: '50%', marginLeft: -size/2, marginTop: -size/2,
+                    background: `radial-gradient(ellipse 55% 40% at 50% 52%, rgba(255,${160 - i*30},${40 - i*10},${0.08 - i*0.02}) 0%, transparent 70%)` }}
+                  animate={{ opacity: [0.6, 0.2, 0.6], scale: [1, 1.06, 1] }}
+                  transition={{ duration: 3, delay: i * 0.6, repeat: Infinity, ease: 'easeInOut' }}
                 />
               ))}
 
-              {/* ── The wormhole globe ── */}
-              <motion.button
-                id="are-you-ready-btn"
-                onMouseEnter={handleBtnHover}
-                onClick={() => navigate('/nebula')}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.93 }}
-                className="relative flex items-center justify-center cursor-pointer select-none overflow-hidden"
-                style={{
-                  width: 200,
-                  height: 200,
-                  borderRadius: '50%',
-                  background: 'radial-gradient(circle at 38% 35%, #ffffff 0%, #d8d8d8 45%, #aaaaaa 100%)',
-                  boxShadow: `
-                    0 0 0 2px rgba(255,255,255,0.8),
-                    0 0 40px rgba(255,255,255,1),
-                    0 0 100px rgba(255,255,255,0.6),
-                    0 0 200px rgba(255,255,255,0.3),
-                    inset -5px -8px 20px rgba(0,0,0,0.15)
-                  `,
-                  border: '2px solid rgba(255,255,255,0.95)',
-                }}
+              {/* SVG: Gargantua black hole */}
+              <button id="are-you-ready-btn" onClick={handleEnter}
+                className="relative cursor-pointer"
+                style={{ background: 'none', border: 'none', padding: 0, width: 320, height: 230 }}
               >
-                {/* ── Wormhole tunnel: concentric dark rings shrinking to centre ── */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200" style={{ borderRadius: '50%' }}>
-                  {/* Tunnel rings — biggest to smallest, getting darker toward centre */}
-                  {[88, 72, 56, 42, 30, 20, 12, 6].map((r, i) => (
-                    <ellipse
-                      key={r}
-                      cx="100" cy="105"
-                      rx={r}
-                      ry={r * 0.38}
-                      fill="none"
-                      stroke="black"
-                      strokeWidth={0.6 + i * 0.15}
-                      strokeOpacity={0.12 + i * 0.06}
-                    />
-                  ))}
-                  {/* Dark tunnel throat */}
-                  <ellipse cx="100" cy="105" rx="5" ry="2" fill="black" fillOpacity="0.55" />
-                  {/* Blinding white-hole light at the tunnel end */}
-                  <radialGradient id="wh-light" cx="50%" cy="52%" r="12%">
-                    <stop offset="0%" stopColor="white" stopOpacity="1" />
-                    <stop offset="60%" stopColor="white" stopOpacity="0.3" />
-                    <stop offset="100%" stopColor="white" stopOpacity="0" />
-                  </radialGradient>
-                  <ellipse cx="100" cy="105" rx="16" ry="7" fill="url(#wh-light)" />
-                  {/* Globe latitude lines */}
-                  <ellipse cx="100" cy="68" rx="72" ry="17" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
-                  <ellipse cx="100" cy="100" rx="95" ry="22" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
-                  <ellipse cx="100" cy="132" rx="72" ry="17" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
-                  <ellipse cx="100" cy="100" rx="22" ry="95" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
-                  <ellipse cx="100" cy="100" rx="55" ry="95" fill="none" stroke="black" strokeWidth="0.5" strokeOpacity="0.18" />
+                <svg viewBox="0 0 320 230" width="320" height="230">
+                  <defs>
+                    <filter id="bh-glow">
+                      <feGaussianBlur stdDeviation="5" result="b"/>
+                      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                    <filter id="bh-corona"><feGaussianBlur stdDeviation="16"/></filter>
+                    <linearGradient id="disk-g" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="transparent"/>
+                      <stop offset="10%" stopColor="rgba(255,130,30,0.3)"/>
+                      <stop offset="28%" stopColor="rgba(255,195,80,0.85)"/>
+                      <stop offset="50%" stopColor="rgba(255,250,190,1)"/>
+                      <stop offset="72%" stopColor="rgba(255,195,80,0.85)"/>
+                      <stop offset="90%" stopColor="rgba(255,130,30,0.3)"/>
+                      <stop offset="100%" stopColor="transparent"/>
+                    </linearGradient>
+                    <linearGradient id="ring-g" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255,255,220,1)"/>
+                      <stop offset="50%" stopColor="rgba(255,210,130,0.95)"/>
+                      <stop offset="100%" stopColor="rgba(255,150,50,0.75)"/>
+                    </linearGradient>
+                  </defs>
+                  {/* Corona outer diffuse */}
+                  <ellipse cx="160" cy="118" rx="155" ry="90" fill="rgba(255,110,20,0.06)" filter="url(#bh-corona)"/>
+                  {/* Back accretion disk */}
+                  <ellipse cx="160" cy="122" rx="152" ry="22" fill="url(#disk-g)" filter="url(#bh-glow)" opacity="0.88"/>
+                  {/* Photon ring */}
+                  <circle cx="160" cy="115" r="78" fill="none" stroke="url(#ring-g)" strokeWidth="18" filter="url(#bh-glow)" opacity="0.97"/>
+                  {/* Shadow */}
+                  <circle cx="160" cy="115" r="70" fill="#000000"/>
+                  {/* Front disk */}
+                  <ellipse cx="160" cy="126" rx="152" ry="18" fill="url(#disk-g)" filter="url(#bh-glow)" opacity="0.82">
+                    <clipPath id="front-clip"><rect x="0" y="114" width="320" height="116"/></clipPath>
+                  </ellipse>
+                  {/* Lensing top arc */}
+                  <path d="M 84,115 A 76,76 0 0,1 236,115" fill="none" stroke="rgba(255,250,200,0.45)" strokeWidth="5" filter="url(#bh-glow)"/>
                 </svg>
 
-                {/* Animated tunnel-inward shimmer rings */}
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute rounded-full pointer-events-none"
-                    style={{
-                      width: 200, height: 200,
-                      top: 0, left: 0,
-                      background: 'none',
-                      border: '1px solid rgba(0,0,0,0.08)',
-                    }}
-                    animate={{ scale: [1.0, 0.05], opacity: [0, 0.35, 0] }}
-                    transition={{
-                      duration: 2.0,
-                      delay: i * 0.65,
-                      repeat: Infinity,
-                      ease: 'easeIn',
-                    }}
-                  />
-                ))}
-
-                {/* Specular highlight */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    width: 65, height: 50, borderRadius: '50%',
-                    top: 20, left: 26,
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, transparent 75%)',
-                    transform: 'rotate(-20deg)',
-                    filter: 'blur(9px)',
-                  }}
+                {/* Animated accretion shimmer */}
+                <motion.div className="absolute pointer-events-none"
+                  style={{ top: '47%', left: '5%', right: '5%', height: 18, borderRadius: 9,
+                    background: 'linear-gradient(90deg, transparent, rgba(255,200,80,0.15) 30%, rgba(255,240,160,0.35) 50%, rgba(255,200,80,0.15) 70%, transparent)',
+                    filter: 'blur(3px)' }}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
 
-                {/* Text — above the tunnel */}
-                <span
-                  className="absolute z-10 text-black font-black text-center leading-tight"
-                  style={{ fontSize: 11, top: 22, width: '75%', letterSpacing: '0.08em' }}
-                >
-                  ARE YOU READY<br />TO GO BEYOND?
-                </span>
-              </motion.button>
+                {/* Text inside shadow */}
+                <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                  style={{ top: '22%', left: '50%', transform: 'translateX(-50%)', width: 130 }}>
+                  <span className="text-white/90 font-black text-center leading-tight"
+                    style={{ fontSize: 11, letterSpacing: '0.1em', textShadow: '0 0 8px rgba(255,200,80,0.8)' }}>
+                    ARE YOU READY<br />TO GO BEYOND?
+                  </span>
+                  <span className="text-white/40 text-center mt-1" style={{ fontSize: 7.5, letterSpacing: '0.15em' }}>
+                    CLICK TO ENTER
+                  </span>
+                </div>
+              </button>
 
               {/* Subtitle */}
-              <motion.p
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="mt-5 text-white/45 text-xs tracking-[0.3em] uppercase animate-pulse"
-              >
+              <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+                className="mt-3 text-white/35 text-xs tracking-[0.3em] uppercase animate-pulse">
                 travelling to the white hole
               </motion.p>
             </div>
