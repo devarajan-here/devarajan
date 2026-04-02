@@ -11,6 +11,9 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import "./index.css";
 import Landing from "./pages/Landing.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import HackodevNebula from "./pages/HackodevNebula.tsx";
+import GalaxyView from "./pages/GalaxyView.tsx";
+import SocIntro from "./pages/SocIntro.tsx";
 import "./types/global.d.ts";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -51,6 +54,9 @@ createRoot(document.getElementById("root")!).render(
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<AuthPage redirectAfterAuth="/" />} /> {/* TODO: change redirect after auth to correct page */}
+            <Route path="/nebula" element={<HackodevNebula />} />
+            <Route path="/nebula/blue-team" element={<GalaxyView />} />
+            <Route path="/soc" element={<SocIntro />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
