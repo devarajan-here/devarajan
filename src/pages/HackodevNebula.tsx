@@ -9,24 +9,35 @@ import { motion, AnimatePresence } from 'framer-motion';
 function MouseOrbitCamera() {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
-  const RADIUS = 22;
+  const radius = useRef(22);
+  const RADIUS_MIN = 8;
+  const RADIUS_MAX = 40;
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.current.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      radius.current = Math.max(RADIUS_MIN, Math.min(RADIUS_MAX, radius.current + e.deltaY * 0.04));
+    };
     window.addEventListener('mousemove', onMove);
-    return () => window.removeEventListener('mousemove', onMove);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('wheel', onWheel);
+    };
   }, []);
 
   useFrame(() => {
     const azimuth = -mouse.current.x * Math.PI * 0.55;
     const elevation = mouse.current.y * Math.PI * 0.22;
+    const r = radius.current;
     const target = new THREE.Vector3(
-      RADIUS * Math.sin(azimuth) * Math.cos(elevation),
-      RADIUS * Math.sin(elevation),
-      RADIUS * Math.cos(azimuth) * Math.cos(elevation),
+      r * Math.sin(azimuth) * Math.cos(elevation),
+      r * Math.sin(elevation),
+      r * Math.cos(azimuth) * Math.cos(elevation),
     );
     camera.position.lerp(target, 0.035);
     camera.lookAt(0, 0, 0);
