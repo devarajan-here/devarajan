@@ -148,38 +148,38 @@ export default function SpaceBackground() {
                   width: 160,
                   height: 160,
                   borderRadius: '50%',
-                  background: 'radial-gradient(circle at 38% 35%, #333 0%, #111 40%, #000 100%)',
+                  background: 'radial-gradient(circle at 38% 35%, #ffffff 0%, #e0e0e0 55%, #b0b0b0 100%)',
                   boxShadow: `
-                    0 0 0 2px rgba(255,255,255,0.25),
-                    0 0 30px rgba(255,255,255,0.5),
-                    0 0 80px rgba(255,255,255,0.25),
-                    0 0 160px rgba(255,255,255,0.1),
-                    inset 0 0 40px rgba(255,255,255,0.07),
-                    inset 2px 3px 8px rgba(255,255,255,0.18)
+                    0 0 0 2px rgba(255,255,255,0.6),
+                    0 0 30px rgba(255,255,255,0.9),
+                    0 0 80px rgba(255,255,255,0.5),
+                    0 0 160px rgba(255,255,255,0.25),
+                    inset 0 0 30px rgba(0,0,0,0.08),
+                    inset -4px -6px 16px rgba(0,0,0,0.12)
                   `,
-                  border: '1.5px solid rgba(255,255,255,0.35)',
+                  border: '2px solid rgba(255,255,255,0.9)',
                 }}
               >
                 {/* Globe latitude lines */}
-                <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 160 160">
+                <svg className="absolute inset-0 w-full h-full opacity-25" viewBox="0 0 160 160">
                   {/* Horizontal arcs */}
-                  <ellipse cx="80" cy="54" rx="58" ry="14" fill="none" stroke="white" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="80" rx="76" ry="18" fill="none" stroke="white" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="106" rx="58" ry="14" fill="none" stroke="white" strokeWidth="0.8"/>
+                  <ellipse cx="80" cy="54" rx="58" ry="14" fill="none" stroke="black" strokeWidth="0.8"/>
+                  <ellipse cx="80" cy="80" rx="76" ry="18" fill="none" stroke="black" strokeWidth="0.8"/>
+                  <ellipse cx="80" cy="106" rx="58" ry="14" fill="none" stroke="black" strokeWidth="0.8"/>
                   {/* Vertical arc */}
-                  <ellipse cx="80" cy="80" rx="18" ry="76" fill="none" stroke="white" strokeWidth="0.8"/>
-                  <ellipse cx="80" cy="80" rx="44" ry="76" fill="none" stroke="white" strokeWidth="0.8"/>
+                  <ellipse cx="80" cy="80" rx="18" ry="76" fill="none" stroke="black" strokeWidth="0.8"/>
+                  <ellipse cx="80" cy="80" rx="44" ry="76" fill="none" stroke="black" strokeWidth="0.8"/>
                 </svg>
 
                 {/* Bright top-left specular highlight — gives the sphere illusion */}
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 50, height: 38, borderRadius: '50%',
-                    top: 22, left: 28,
-                    background: 'radial-gradient(circle, rgba(255,255,255,0.55) 0%, transparent 80%)',
+                    width: 55, height: 42, borderRadius: '50%',
+                    top: 18, left: 24,
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 80%)',
                     transform: 'rotate(-20deg)',
-                    filter: 'blur(6px)',
+                    filter: 'blur(8px)',
                   }}
                 />
 
@@ -189,15 +189,15 @@ export default function SpaceBackground() {
                   animate={{ rotate: [0, 360] }}
                   transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
                   style={{
-                    background: 'conic-gradient(from 0deg, transparent 75%, rgba(255,255,255,0.12) 90%, transparent 100%)',
+                    background: 'conic-gradient(from 0deg, transparent 75%, rgba(0,0,0,0.06) 90%, transparent 100%)',
                     borderRadius: '50%',
                   }}
                 />
 
                 {/* Text */}
                 <span
-                  className="relative z-10 text-white font-bold text-center leading-tight tracking-wider"
-                  style={{ fontSize: 13, textShadow: '0 0 12px rgba(255,255,255,0.9), 0 0 24px rgba(255,255,255,0.5)' }}
+                  className="relative z-10 text-black font-bold text-center leading-tight tracking-wider"
+                  style={{ fontSize: 13 }}
                 >
                   ARE YOU<br />READY?
                 </span>
