@@ -283,6 +283,10 @@ export default function HackodevNebula() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonName, setComingSoonName] = useState('');
+  const [showVideo, setShowVideo] = useState(false);
+  const [musicName, setMusicName] = useState('Star Wars Theme');
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGalaxyClick = useCallback((galaxy: typeof GALAXIES[0]) => {
     if (galaxy.route) {
@@ -294,8 +298,26 @@ export default function HackodevNebula() {
     }
   }, [navigate]);
 
+  const handleMusicChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setMusicName(file.name.replace(/\.\w+$/, ''));
+
+    // Find the global BackgroundMusic audio element and switch its source
+    const globalAudio = document.querySelector('audio') as HTMLAudioElement | null;
+    if (globalAudio) {
+      globalAudio.src = url;
+      globalAudio.play().catch(() => {});
+    }
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
+      {/* Hidden file input for music */}
+      <input ref={fileInputRef} type="file" accept="audio/*" className="hidden"
+        onChange={handleMusicChange} />
+
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 flex flex-col items-center pt-8 pointer-events-none">
         <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
@@ -305,6 +327,31 @@ export default function HackodevNebula() {
           <p className="mt-2 text-white/45 text-xs tracking-widest uppercase text-center">
             Move your mouse to explore · Click a galaxy to enter
           </p>
+
+          {/* ── Icon buttons row ── */}
+          <div className="flex items-center justify-center gap-3 mt-3 pointer-events-auto">
+            {/* Play Video Button */}
+            <button onClick={() => setShowVideo(true)}
+              className="group relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/70 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
+              title="Watch intro video"
+            >
+              <svg className="w-4 h-4 group-hover:text-purple-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <span className="text-[10px] tracking-[0.15em] uppercase font-medium">Play Video</span>
+            </button>
+
+            {/* Change Music Button */}
+            <button onClick={() => fileInputRef.current?.click()}
+              className="group relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/70 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
+              title={`Now playing: ${musicName}`}
+            >
+              <svg className="w-4 h-4 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+              </svg>
+              <span className="text-[10px] tracking-[0.15em] uppercase font-medium">Change Music</span>
+            </button>
+          </div>
         </motion.div>
       </div>
 
@@ -338,6 +385,42 @@ export default function HackodevNebula() {
           />
         ))}
       </Canvas>
+
+      {/* ── Video Modal ── */}
+      <AnimatePresence>
+        {showVideo && (
+          <motion.div
+            key="video-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+            onClick={() => setShowVideo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+              className="relative w-[90vw] max-w-[1100px] aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                src="/1.mpeg"
+                controls
+                autoPlay
+                className="w-full h-full object-cover"
+              />
+              {/* Close button */}
+              <button onClick={() => setShowVideo(false)}
+                className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-black/60 backdrop-blur border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all text-lg"
+              >
+                ✕
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Coming soon toast */}
       <AnimatePresence>
