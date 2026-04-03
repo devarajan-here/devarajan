@@ -287,7 +287,7 @@ export default function HackodevNebula() {
 
   const TRACKS = useMemo(() => [
     { name: 'Star Wars Theme', src: '/star-wars-theme.mp3' },
-    { name: 'Nebula Drift', src: '/1.mp3' },
+    { name: 'Nebula Drift', src: '/1.mpeg' },
   ], []);
 
   const handleGalaxyClick = useCallback((galaxy: typeof GALAXIES[0]) => {
