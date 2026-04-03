@@ -284,7 +284,6 @@ export default function HackodevNebula() {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonName, setComingSoonName] = useState('');
   const [musicIndex, setMusicIndex] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const TRACKS = useMemo(() => [
     { name: 'Star Wars Theme', src: '/star-wars-theme.mp3' },
@@ -301,21 +300,6 @@ export default function HackodevNebula() {
     }
   }, [navigate]);
 
-  // Play video in fullscreen
-  const handlePlayVideo = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.style.display = 'block';
-    video.play().then(() => {
-      const el = video as HTMLVideoElement & {
-        webkitRequestFullscreen?: () => Promise<void>;
-        msRequestFullscreen?: () => void;
-      };
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    }).catch(() => {});
-  }, []);
-
   // Cycle to next music track
   const handleNextTrack = useCallback(() => {
     const nextIdx = (musicIndex + 1) % TRACKS.length;
@@ -329,13 +313,6 @@ export default function HackodevNebula() {
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
-      {/* Hidden fullscreen video element */}
-      <video ref={videoRef} src="/1.mpeg" controls
-        style={{ display: 'none', position: 'fixed', inset: 0, width: '100vw', height: '100vh', zIndex: 100, objectFit: 'contain', background: '#000' }}
-        onEnded={() => { if (videoRef.current) { videoRef.current.style.display = 'none'; if (document.fullscreenElement) document.exitFullscreen(); } }}
-        onFullscreenChange={() => { if (!document.fullscreenElement && videoRef.current) { videoRef.current.pause(); videoRef.current.style.display = 'none'; } }}
-      />
-
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 flex flex-col items-center pt-8 pointer-events-none">
         <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
@@ -346,19 +323,8 @@ export default function HackodevNebula() {
             Move your mouse to explore · Click a galaxy to enter
           </p>
 
-          {/* ── Icon buttons row ── */}
+          {/* ── Music switcher ── */}
           <div className="flex items-center justify-center gap-3 mt-3 pointer-events-auto">
-            {/* Play Video Button */}
-            <button onClick={handlePlayVideo}
-              className="group relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/70 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
-              title="Watch intro video (fullscreen)"
-            >
-              <svg className="w-4 h-4 group-hover:text-purple-400 transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-              <span className="text-[10px] tracking-[0.15em] uppercase font-medium">Play Video</span>
-            </button>
-
             {/* Next Track Button */}
             <button onClick={handleNextTrack}
               className="group relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/70 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
