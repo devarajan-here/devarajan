@@ -327,13 +327,13 @@ export default function HackodevNebula() {
           <div className="flex items-center justify-center gap-3 mt-3 pointer-events-auto">
             {/* Next Track Button */}
             <button onClick={handleNextTrack}
-              className="group relative flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/70 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.07] backdrop-blur-md border border-white/15 text-white/60 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 hover:scale-105"
               title={`Now playing: ${TRACKS[musicIndex].name}`}
             >
-              <svg className="w-4 h-4 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <svg className="w-3 h-3 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
               </svg>
-              <span className="text-[10px] tracking-[0.15em] uppercase font-medium">
+              <span className="text-[8px] tracking-[0.12em] uppercase font-medium">
                 {TRACKS[(musicIndex + 1) % TRACKS.length].name}
               </span>
             </button>
