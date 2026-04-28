@@ -22,7 +22,7 @@ function BlackHoleModel() {
     const height = mount.clientHeight || 440;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.01, 100);
-    camera.position.set(0, 0.15, 4.2);
+    camera.position.set(0, 0.15, 3.75);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -54,7 +54,7 @@ function BlackHoleModel() {
       const maxSize = Math.max(size.x, size.y, size.z) || 1;
 
       model.position.sub(center);
-      model.scale.setScalar(2.7 / maxSize);
+      model.scale.setScalar(3.05 / maxSize);
       model.rotation.x = -0.28;
 
       model.traverse((obj: any) => {
@@ -382,7 +382,7 @@ export default function SpaceBackground() {
                 style={{ perspective: 900 }}
               >
                 <div
-                  className="relative pointer-events-none h-[360px] w-[min(560px,88vw)]"
+                  className="relative pointer-events-none h-[420px] w-[min(650px,92vw)]"
                   style={{ filter: 'drop-shadow(0 0 46px rgba(252,211,77,0.18))' }}
                 >
                   <BlackHoleModel />
