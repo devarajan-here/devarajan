@@ -6,18 +6,19 @@ import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ── Mouse-controlled orbit camera ─────────────────────────────────────────
-function MouseOrbitCamera() {
-  const { camera, gl } = useThree();
+function MouseOrbitCamera({ focusTarget }: { focusTarget: [number, number, number] | null }) {
+  const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
   const radius = useRef(38);
-  const RADIUS_MIN = 5;
+  const RADIUS_MIN = 14;
   const RADIUS_MAX = 80;
   const focus = useRef(new THREE.Vector3(0, 0, 0));
   const targetFocus = useRef(new THREE.Vector3(0, 0, 0));
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const viewPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
-  const pointer = useMemo(() => new THREE.Vector2(), []);
-  const hitPoint = useMemo(() => new THREE.Vector3(), []);
+  const focusTargetRef = useRef<THREE.Vector3 | null>(null);
+
+  useEffect(() => {
+    focusTargetRef.current = focusTarget ? new THREE.Vector3(...focusTarget) : null;
+  }, [focusTarget]);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -26,23 +27,12 @@ function MouseOrbitCamera() {
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const rect = gl.domElement.getBoundingClientRect();
-      pointer.set(
-        ((e.clientX - rect.left) / rect.width) * 2 - 1,
-        -((e.clientY - rect.top) / rect.height) * 2 + 1,
-      );
-      raycaster.setFromCamera(pointer, camera);
-      const hasHit = raycaster.ray.intersectPlane(viewPlane, hitPoint);
-      const previousRadius = radius.current;
       radius.current = Math.max(RADIUS_MIN, Math.min(RADIUS_MAX, radius.current + e.deltaY * 0.06));
 
-      if (hasHit && e.deltaY < 0) {
-        const zoomAmount = Math.min(0.42, Math.max(0.1, (previousRadius - radius.current) / previousRadius * 2.6));
-        targetFocus.current.lerp(hitPoint, zoomAmount);
-        targetFocus.current.x = THREE.MathUtils.clamp(targetFocus.current.x, -52, 52);
-        targetFocus.current.z = THREE.MathUtils.clamp(targetFocus.current.z, -52, 52);
-      } else if (e.deltaY > 0) {
-        targetFocus.current.lerp(new THREE.Vector3(0, 0, 0), 0.04);
+      if (e.deltaY < 0 && focusTargetRef.current) {
+        targetFocus.current.copy(focusTargetRef.current);
+      } else if (e.deltaY > 0 && radius.current > 42) {
+        targetFocus.current.set(0, 0, 0);
       }
     };
     window.addEventListener('mousemove', onMove);
@@ -51,7 +41,7 @@ function MouseOrbitCamera() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('wheel', onWheel);
     };
-  }, [camera, gl, hitPoint, pointer, raycaster, viewPlane]);
+  }, []);
 
   useFrame(() => {
     const azimuth = -mouse.current.x * Math.PI * 0.55;
@@ -63,7 +53,7 @@ function MouseOrbitCamera() {
       r * Math.sin(elevation),
       r * Math.cos(azimuth) * Math.cos(elevation),
     ).add(focus.current);
-    camera.position.lerp(target, 0.035);
+    camera.position.lerp(target, 0.045);
     camera.lookAt(focus.current);
   });
 
@@ -308,6 +298,10 @@ export default function HackodevNebula() {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonName, setComingSoonName] = useState('');
   const [musicIndex, setMusicIndex] = useState(0);
+  const hoveredGalaxy = useMemo(
+    () => GALAXIES.find((galaxy) => galaxy.id === hoveredId) ?? null,
+    [hoveredId],
+  );
 
   const TRACKS = useMemo(() => [
     { name: 'Star Wars Theme', src: '/star-wars-theme.mp3' },
@@ -378,7 +372,7 @@ export default function HackodevNebula() {
         <fog attach="fog" args={['#00000d', 65, 120]} />
         <Stars radius={150} depth={100} count={12000} factor={6} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
-        <MouseOrbitCamera />
+        <MouseOrbitCamera focusTarget={hoveredGalaxy?.position ?? null} />
         <ambientLight intensity={0.1} />
         <pointLight position={[0, 15, 15]} intensity={0.4} color="#4f46e5" />
 

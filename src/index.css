@@ -144,53 +144,14 @@ html.portfolio-light body {
 }
 
 html.portfolio-light #root {
+  filter: invert(1) hue-rotate(180deg);
   background: #f8fafc;
   min-height: 100vh;
 }
 
-html.portfolio-light .bg-black {
-  background-color: #f8fafc !important;
-}
-
-html.portfolio-light [class*="bg-black/"] {
-  background-color: rgba(255, 255, 255, 0.78) !important;
-}
-
-html.portfolio-light .bg-white {
-  background-color: #0f172a !important;
-}
-
-html.portfolio-light [class*="bg-white/"] {
-  background-color: rgba(15, 23, 42, 0.06) !important;
-}
-
-html.portfolio-light .text-white,
-html.portfolio-light [class*="text-white/"] {
-  color: #0f172a !important;
-}
-
-html.portfolio-light .text-black {
-  color: #ffffff !important;
-}
-
-html.portfolio-light [class*="border-white/"] {
-  border-color: rgba(15, 23, 42, 0.16) !important;
-}
-
-html.portfolio-light [class*="hover:bg-white/"]:hover {
-  background-color: rgba(15, 23, 42, 0.1) !important;
-}
-
-html.portfolio-light canvas {
-  opacity: 0.38;
-}
-
-html.portfolio-light [class*="bg-gradient-to-r"] {
-  background-image: linear-gradient(to right, #1d4ed8, #7c3aed, #0891b2) !important;
-}
-
 html.portfolio-light .portfolio-theme-toggle {
-  background: rgba(15, 23, 42, 0.9) !important;
-  color: #ffffff !important;
+  filter: invert(1) hue-rotate(180deg);
+  background: rgba(255, 255, 255, 0.88);
+  color: #0f172a;
   border-color: rgba(15, 23, 42, 0.2);
 }
