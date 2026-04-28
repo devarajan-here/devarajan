@@ -15,7 +15,7 @@ import {
   Phone
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,12 @@ export default function Landing() {
   // Project modal state and data
   const [projectOpen, setProjectOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [showPhotoModel, setShowPhotoModel] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowPhotoModel(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, []);
   const projectsData: Record<
     string,
     {
@@ -117,7 +123,7 @@ export default function Landing() {
       {/* 3D Spaceship Layer */}
       <Spaceship />
       {/* 3D Photo Layer */}
-      <Photo />
+      {showPhotoModel && <Photo />}
 
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative z-10 px-4">

@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound.tsx";
 import HackodevNebula from "./pages/HackodevNebula.tsx";
 import GalaxyView from "./pages/GalaxyView.tsx";
 import SocIntro from "./pages/SocIntro.tsx";
+import SocDomain from "./pages/SocDomain.tsx";
 import "./types/global.d.ts";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
@@ -57,6 +58,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/nebula" element={<HackodevNebula />} />
             <Route path="/nebula/blue-team" element={<GalaxyView />} />
             <Route path="/soc" element={<SocIntro />} />
+            <Route path="/soc/:domain" element={<SocDomain />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

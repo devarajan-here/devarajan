@@ -4,12 +4,12 @@ import { useEffect, useRef, useState } from "react";
 export function BackgroundMusic() {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const backgroundVolume = 0.12;
 
   useEffect(() => {
     if (audioRef.current) {
-      // Set up audio properties
-      audioRef.current.volume = 0.3; // Set volume to 30% for background music
-      audioRef.current.loop = true; // Loop the music
+      audioRef.current.volume = backgroundVolume;
+      audioRef.current.loop = true;
 
       if (!isMuted) {
         // Try playing immediately

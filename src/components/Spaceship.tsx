@@ -2,6 +2,10 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+THREE.Cache.enabled = true;
+
+const MODEL_PATH = "/assets/racing_ship (1).glb";
+
 export default function Spaceship() {
   const mountRef = useRef<HTMLDivElement | null>(null);
 
@@ -76,7 +80,6 @@ export default function Spaceship() {
 
     // Load GLB
     const loader = new GLTFLoader();
-    const MODEL_PATH = "/assets/racing_ship (1).glb";
     const group = new THREE.Group();
     scene.add(group);
 
@@ -172,12 +175,22 @@ export default function Spaceship() {
     const lookAtTarget = new THREE.Vector3(0, 0, 0);
 
     // Animation path
-    const path = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(8, -2, -3),
-        new THREE.Vector3(2, -0.5, -3),
-        new THREE.Vector3(0, 0, -3),
-        new THREE.Vector3(-12, 1, -3)
-    ]);
+    const path = new THREE.CatmullRomCurve3(
+      [
+        new THREE.Vector3(9, -2.2, -3),
+        new THREE.Vector3(5, -1.25, -3),
+        new THREE.Vector3(1.4, -0.25, -3),
+        new THREE.Vector3(-2.4, 0.35, -3),
+        new THREE.Vector3(-8, 0.85, -3),
+        new THREE.Vector3(-12, 1, -3),
+      ],
+      false,
+      "centripetal",
+      0.35
+    );
+    const targetPosition = new THREE.Vector3();
+    const smoothedPosition = new THREE.Vector3(9, -2.2, -3);
+    const smoothedRotation = new THREE.Euler();
 
     // Warp streaks
     const warpStreaksGeo = new THREE.BufferGeometry();
@@ -258,32 +271,42 @@ export default function Spaceship() {
                 t = 0;
                 hyperjumpState.active = false;
                 group.scale.set(1, 1, 1);
-                group.position.z = 0;
+                smoothedPosition.set(9, -2.2, -3);
+                targetPosition.copy(smoothedPosition);
+                group.position.copy(smoothedPosition);
+                smoothedRotation.set(0, 0, 0);
+                group.rotation.copy(smoothedRotation);
                 renderer.toneMappingExposure = 1.2;
                 engineLight.intensity = 1.4;
                 warpStreaksMat.opacity = 0;
             }
         } else {
             group.visible = true; // Show the ship
-            const pathPoint = path.getPointAt(s);
-            group.position.copy(pathPoint);
+            const pathProgress = THREE.MathUtils.smoothstep(s, 0, 1);
+            const pathPoint = path.getPointAt(pathProgress);
+            targetPosition.copy(pathPoint);
 
             // Bobbing and drift
-            group.position.y += Math.sin(t * 1.5) * 0.1;
-            group.position.x += Math.sin(t * 1.2) * 0.05;
+            targetPosition.y += Math.sin(t * 1.5) * 0.08;
+            targetPosition.x += Math.sin(t * 1.2) * 0.04;
+            smoothedPosition.x = THREE.MathUtils.damp(smoothedPosition.x, targetPosition.x, 5, dt);
+            smoothedPosition.y = THREE.MathUtils.damp(smoothedPosition.y, targetPosition.y, 5, dt);
+            smoothedPosition.z = THREE.MathUtils.damp(smoothedPosition.z, targetPosition.z, 5, dt);
+            group.position.copy(smoothedPosition);
 
 
             // Banking
-            const tangent = path.getTangentAt(s);
-            const bankTarget = -tangent.y;
-            group.rotation.z += (bankTarget - group.rotation.z) * 0.05;
+            const tangent = path.getTangentAt(pathProgress);
+            const bankTarget = THREE.MathUtils.clamp(-tangent.y * 0.85, -0.35, 0.35);
 
             // Mouse parallax (soften near exit)
             const parallaxFactor = 1 - s;
             const targetRotX = mouse.y * 0.25 * parallaxFactor;
             const targetRotY = mouse.x * 0.35 * parallaxFactor;
-            group.rotation.x += (targetRotX - group.rotation.x) * 0.05;
-            group.rotation.y += (targetRotY - group.rotation.y) * 0.04;
+            smoothedRotation.x = THREE.MathUtils.damp(smoothedRotation.x, targetRotX, 4, dt);
+            smoothedRotation.y = THREE.MathUtils.damp(smoothedRotation.y, targetRotY, 4, dt);
+            smoothedRotation.z = THREE.MathUtils.damp(smoothedRotation.z, bankTarget, 5, dt);
+            group.rotation.copy(smoothedRotation);
         }
 
 
@@ -294,7 +317,9 @@ export default function Spaceship() {
         // engineSprite.position.copy(glowPos);
 
         // Camera tracking
-        lookAtTarget.lerp(group.position, 0.08);
+        lookAtTarget.x = THREE.MathUtils.damp(lookAtTarget.x, group.position.x, 3, dt);
+        lookAtTarget.y = THREE.MathUtils.damp(lookAtTarget.y, group.position.y, 3, dt);
+        lookAtTarget.z = THREE.MathUtils.damp(lookAtTarget.z, group.position.z, 3, dt);
         camera.lookAt(lookAtTarget);
       }
 
@@ -321,11 +346,9 @@ export default function Spaceship() {
   return (
     <div
       ref={mountRef}
-      className="pointer-events-none fixed inset-y-0 right-0 z-10"
+      className="pointer-events-none fixed inset-0 z-10"
       style={{
-        width: "55vw",
-        minWidth: 320,
-        maxWidth: "900px",
+        width: "100vw",
       }}
       aria-hidden="true"
     />

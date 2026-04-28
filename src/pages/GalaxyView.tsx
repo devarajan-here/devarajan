@@ -3,7 +3,7 @@ import { Stars, Text, Billboard } from '@react-three/drei';
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 // ── Shared mouse+scroll camera controller ─────────────────────────────────
 function OrbitScrollCamera({ initialRadius = 14 }: { initialRadius?: number }) {
@@ -69,6 +69,7 @@ function AtmosphereGlow({ size, color }: { size: number; color: string }) {
 // ── Planet ────────────────────────────────────────────────────────────────
 interface PlanetProps {
   name: string;
+  tagline: string;
   textureUrl: string;
   emissiveColor: string;
   atmosColor: string;
@@ -85,7 +86,7 @@ interface PlanetProps {
 }
 
 function Planet({
-  name, textureUrl, emissiveColor, atmosColor,
+  name, tagline, textureUrl, emissiveColor, atmosColor,
   orbitRadius, orbitSpeed, orbitTilt, size, startAngle,
   hasRings, ringColor, cloudOpacity = 0,
   onClick, isSOC
@@ -192,10 +193,18 @@ function Planet({
           color={hovered ? '#ffffff' : '#ffffffaa'} anchorX="center" anchorY="middle">
           {name}
         </Text>
-        {hovered && (
+        {hovered && isSOC && (
           <Text position={[0, size + 0.9, 0]} fontSize={0.15}
-            color={isSOC ? '#60a5fa' : '#ffffff66'} anchorX="center" anchorY="middle">
-            {isSOC ? '🔵 Click to enter SOC Academy' : 'Coming Soon'}
+            color={isSOC ? '#60a5fa' : '#c7d2fe'} anchorX="center" anchorY="middle"
+            maxWidth={2.6} textAlign="center">
+            {'Open SOC Blueprint'}
+          </Text>
+        )}
+        {hovered && !isSOC && (
+          <Text position={[0, size + 1.16, 0]} fontSize={0.12}
+            color="#93c5fd" anchorX="center" anchorY="middle"
+            maxWidth={2.8} textAlign="center">
+            {tagline}
           </Text>
         )}
       </Billboard>
@@ -310,45 +319,122 @@ function GalaxyBackground() {
 // ── Planet definitions ────────────────────────────────────────────────────
 const PLANETS = [
   {
-    name: 'SOC', textureUrl: '/textures/earth.jpg', emissiveColor: '#3b82f6', atmosColor: '#60a5fa',
+    name: 'SOC', tagline: 'Full operations blueprint',
+    textureUrl: '/textures/earth.jpg', emissiveColor: '#3b82f6', atmosColor: '#60a5fa',
     orbitRadius: 2.8, orbitSpeed: 0.32, orbitTilt: 0.3, size: 0.55, startAngle: 0.5,
     hasRings: false, cloudOpacity: 0.15, isSOC: true, route: '/soc',
   },
   {
-    name: 'SIEM', textureUrl: '/textures/neptune.jpg', emissiveColor: '#0ea5e9', atmosColor: '#38bdf8',
+    name: 'SIEM', tagline: 'Logs, correlation, dashboards',
+    textureUrl: '/textures/neptune.jpg', emissiveColor: '#0ea5e9', atmosColor: '#38bdf8',
     orbitRadius: 4.4, orbitSpeed: 0.2, orbitTilt: 0.5, size: 0.44, startAngle: 2.0,
-    hasRings: true, ringColor: '#38bdf8', cloudOpacity: 0, isSOC: false, route: null,
+    hasRings: true, ringColor: '#38bdf8', cloudOpacity: 0, isSOC: false, route: '/soc/siem',
   },
   {
-    name: 'Threat Intel', textureUrl: '/textures/jupiter.jpg', emissiveColor: '#6366f1', atmosColor: '#818cf8',
+    name: 'Threat Intel', tagline: 'IOCs, TTPs, actor tracking',
+    textureUrl: '/textures/jupiter.jpg', emissiveColor: '#6366f1', atmosColor: '#818cf8',
     orbitRadius: 6.0, orbitSpeed: 0.15, orbitTilt: 0.7, size: 0.48, startAngle: 1.0,
-    hasRings: false, cloudOpacity: 0, isSOC: false, route: null,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/threat-intel',
   },
   {
-    name: 'Forensics', textureUrl: '/textures/mars.jpg', emissiveColor: '#22d3ee', atmosColor: '#67e8f9',
+    name: 'Forensics', tagline: 'Evidence, disk, memory, timeline',
+    textureUrl: '/textures/mars.jpg', emissiveColor: '#22d3ee', atmosColor: '#67e8f9',
     orbitRadius: 7.5, orbitSpeed: 0.1, orbitTilt: 0.9, size: 0.42, startAngle: 3.5,
-    hasRings: false, cloudOpacity: 0, isSOC: false, route: null,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/forensics',
   },
   {
-    name: 'Compliance', textureUrl: '/textures/neptune.jpg', emissiveColor: '#818cf8', atmosColor: '#a5b4fc',
+    name: 'Compliance', tagline: 'NIST, ISO, SOC 2, audit evidence',
+    textureUrl: '/textures/neptune.jpg', emissiveColor: '#818cf8', atmosColor: '#a5b4fc',
     orbitRadius: 9.2, orbitSpeed: 0.07, orbitTilt: 0.4, size: 0.38, startAngle: 0.2,
-    hasRings: true, ringColor: '#a5b4fc', cloudOpacity: 0, isSOC: false, route: null,
+    hasRings: true, ringColor: '#a5b4fc', cloudOpacity: 0, isSOC: false, route: '/soc/compliance',
+  },
+  {
+    name: 'Alert Triage', tagline: 'Validate, enrich, prioritize',
+    textureUrl: '/textures/mars.jpg', emissiveColor: '#f97316', atmosColor: '#fb923c',
+    orbitRadius: 10.8, orbitSpeed: 0.12, orbitTilt: 1.1, size: 0.34, startAngle: 4.4,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/alert-triage',
+  },
+  {
+    name: 'Incident Response', tagline: 'Contain, eradicate, recover',
+    textureUrl: '/textures/jupiter.jpg', emissiveColor: '#ef4444', atmosColor: '#f87171',
+    orbitRadius: 12.3, orbitSpeed: 0.09, orbitTilt: 0.75, size: 0.46, startAngle: 5.1,
+    hasRings: true, ringColor: '#f87171', cloudOpacity: 0, isSOC: false, route: '/soc/incident-response',
+  },
+  {
+    name: 'Threat Hunting', tagline: 'Hypotheses, anomalies, hunts',
+    textureUrl: '/textures/earth.jpg', emissiveColor: '#14b8a6', atmosColor: '#5eead4',
+    orbitRadius: 13.8, orbitSpeed: 0.08, orbitTilt: 1.25, size: 0.37, startAngle: 2.8,
+    hasRings: false, cloudOpacity: 0.08, isSOC: false, route: '/soc/threat-hunting',
+  },
+  {
+    name: 'Detection Engineering', tagline: 'Sigma, YARA, correlation rules',
+    textureUrl: '/textures/neptune.jpg', emissiveColor: '#a855f7', atmosColor: '#c084fc',
+    orbitRadius: 15.2, orbitSpeed: 0.065, orbitTilt: 0.6, size: 0.4, startAngle: 1.7,
+    hasRings: true, ringColor: '#c084fc', cloudOpacity: 0, isSOC: false, route: '/soc/detection-engineering',
+  },
+  {
+    name: 'SOAR', tagline: 'Playbooks and automation',
+    textureUrl: '/textures/mars.jpg', emissiveColor: '#eab308', atmosColor: '#fde047',
+    orbitRadius: 16.6, orbitSpeed: 0.06, orbitTilt: 1.35, size: 0.33, startAngle: 3.9,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/soar',
+  },
+  {
+    name: 'EDR', tagline: 'Endpoint telemetry and response',
+    textureUrl: '/textures/earth.jpg', emissiveColor: '#22c55e', atmosColor: '#86efac',
+    orbitRadius: 18.0, orbitSpeed: 0.052, orbitTilt: 0.95, size: 0.36, startAngle: 0.9,
+    hasRings: false, cloudOpacity: 0.1, isSOC: false, route: '/soc/edr',
+  },
+  {
+    name: 'NDR', tagline: 'Network detection and Zeek logs',
+    textureUrl: '/textures/neptune.jpg', emissiveColor: '#06b6d4', atmosColor: '#67e8f9',
+    orbitRadius: 19.4, orbitSpeed: 0.048, orbitTilt: 1.45, size: 0.35, startAngle: 4.9,
+    hasRings: true, ringColor: '#67e8f9', cloudOpacity: 0, isSOC: false, route: '/soc/ndr',
+  },
+  {
+    name: 'Malware Analysis', tagline: 'Static, dynamic, reverse engineering',
+    textureUrl: '/textures/jupiter.jpg', emissiveColor: '#84cc16', atmosColor: '#bef264',
+    orbitRadius: 20.8, orbitSpeed: 0.042, orbitTilt: 1.05, size: 0.43, startAngle: 2.35,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/malware-analysis',
+  },
+  {
+    name: 'Email Security', tagline: 'Phishing, headers, SPF/DKIM/DMARC',
+    textureUrl: '/textures/mars.jpg', emissiveColor: '#f59e0b', atmosColor: '#fbbf24',
+    orbitRadius: 22.0, orbitSpeed: 0.038, orbitTilt: 0.7, size: 0.34, startAngle: 5.75,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/email-security',
+  },
+  {
+    name: 'Vulnerability Mgmt', tagline: 'Exposure, patching, risk priority',
+    textureUrl: '/textures/earth.jpg', emissiveColor: '#64748b', atmosColor: '#cbd5e1',
+    orbitRadius: 23.2, orbitSpeed: 0.034, orbitTilt: 1.55, size: 0.38, startAngle: 3.15,
+    hasRings: true, ringColor: '#cbd5e1', cloudOpacity: 0.06, isSOC: false, route: '/soc/vulnerability-mgmt',
+  },
+  {
+    name: 'Cloud Security', tagline: 'Cloud logs, posture, identity',
+    textureUrl: '/textures/neptune.jpg', emissiveColor: '#38bdf8', atmosColor: '#bae6fd',
+    orbitRadius: 24.4, orbitSpeed: 0.03, orbitTilt: 1.2, size: 0.39, startAngle: 0.1,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/cloud-security',
+  },
+  {
+    name: 'IAM', tagline: 'Identity, access, privilege abuse',
+    textureUrl: '/textures/jupiter.jpg', emissiveColor: '#ec4899', atmosColor: '#f9a8d4',
+    orbitRadius: 25.6, orbitSpeed: 0.028, orbitTilt: 0.85, size: 0.32, startAngle: 1.35,
+    hasRings: false, cloudOpacity: 0, isSOC: false, route: '/soc/iam',
+  },
+  {
+    name: 'Case Management', tagline: 'Tickets, evidence, analyst workflow',
+    textureUrl: '/textures/mars.jpg', emissiveColor: '#0f766e', atmosColor: '#2dd4bf',
+    orbitRadius: 26.8, orbitSpeed: 0.026, orbitTilt: 1.4, size: 0.34, startAngle: 4.15,
+    hasRings: true, ringColor: '#2dd4bf', cloudOpacity: 0, isSOC: false, route: '/soc/case-management',
   },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function GalaxyView() {
   const navigate = useNavigate();
-  const [showComingSoon, setShowComingSoon] = useState(false);
-  const [comingName, setComingName] = useState('');
 
   const handlePlanetClick = useCallback((planet: typeof PLANETS[0]) => {
     if (planet.route) {
       navigate(planet.route);
-    } else {
-      setComingName(planet.name);
-      setShowComingSoon(true);
-      setTimeout(() => setShowComingSoon(false), 2500);
     }
   }, [navigate]);
 
@@ -392,20 +478,11 @@ export default function GalaxyView() {
       </Canvas>
 
       {/* Toast */}
-      <AnimatePresence>
-        {showComingSoon && (
-          <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 px-6 py-3 rounded-xl bg-white/10 backdrop-blur border border-white/20 text-white text-sm">
-            🚀 <span className="font-semibold">{comingName}</span> — Coming Soon
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
+<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}
         className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/25 text-xs tracking-widest pointer-events-none">
         MOVE MOUSE TO ORBIT · SCROLL TO ZOOM
       </motion.p>
     </div>
   );
 }
+

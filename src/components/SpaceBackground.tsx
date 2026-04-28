@@ -1,12 +1,115 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 interface Star {
   x: number;
   y: number;
   z: number;
   prevZ: number;
+}
+
+function BlackHoleModel() {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+
+    const width = mount.clientWidth || 440;
+    const height = mount.clientHeight || 440;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.01, 100);
+    camera.position.set(0, 0.15, 4.2);
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(width, height);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.45;
+    mount.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0x88ccff, 0.8));
+
+    const keyLight = new THREE.PointLight(0x8fdcff, 3.2, 12);
+    keyLight.position.set(1.8, 1.4, 2.5);
+    scene.add(keyLight);
+
+    const warmLight = new THREE.PointLight(0xff9b45, 2.4, 10);
+    warmLight.position.set(-1.6, -0.7, 2.2);
+    scene.add(warmLight);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    const loader = new GLTFLoader();
+    loader.load('/assets/blackhole.glb', (gltf) => {
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const maxSize = Math.max(size.x, size.y, size.z) || 1;
+
+      model.position.sub(center);
+      model.scale.setScalar(2.7 / maxSize);
+      model.rotation.x = -0.28;
+
+      model.traverse((obj: any) => {
+        if (obj.isMesh) {
+          obj.frustumCulled = false;
+          const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+          for (const material of materials) {
+            if (material && 'emissiveIntensity' in material) {
+              material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 0.35);
+            }
+            if (material && 'needsUpdate' in material) material.needsUpdate = true;
+          }
+        }
+      });
+
+      group.add(model);
+    });
+
+    let raf = 0;
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const elapsed = clock.getElapsedTime();
+      group.rotation.y = elapsed * 0.35;
+      group.rotation.z = Math.sin(elapsed * 0.55) * 0.045;
+      group.scale.setScalar(1 + Math.sin(elapsed * 1.2) * 0.025);
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(animate);
+    };
+    animate();
+
+    const onResize = () => {
+      const nextWidth = mount.clientWidth || 440;
+      const nextHeight = mount.clientHeight || 440;
+      camera.aspect = nextWidth / nextHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(nextWidth, nextHeight);
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+      mount.removeChild(renderer.domElement);
+      renderer.dispose();
+    };
+  }, []);
+
+  return (
+    <div
+      ref={mountRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 6, filter: 'drop-shadow(0 0 34px rgba(103,232,249,0.45))' }}
+      aria-hidden="true"
+    />
+  );
 }
 
 // ── Canvas-based hyperspace warp transition ─────────────────────────────
@@ -151,6 +254,7 @@ export default function SpaceBackground() {
   const starsRef = useRef<Star[]>([]);
   const speedRef = useRef(0.5);
   const [warp, setWarp] = useState<number>(1);
+  const [hasClickedWarp, setHasClickedWarp] = useState(false);
   const [entering, setEntering] = useState(false);
   const navigate = useNavigate();
 
@@ -161,6 +265,11 @@ export default function SpaceBackground() {
   const handleWarpComplete = useCallback(() => {
     navigate('/nebula');
   }, [navigate]);
+
+  const handleIncreaseWarp = useCallback(() => {
+    setHasClickedWarp(true);
+    setWarp((w) => Math.min(10, w + 1));
+  }, []);
 
   useEffect(() => {
     speedRef.current = 0.5 * warp;
@@ -250,97 +359,38 @@ export default function SpaceBackground() {
       <AnimatePresence>
         {warp === 10 && !entering && (
           <motion.div key="wh-wrapper"
-            initial={{ opacity: 0, scale: 0.3 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{ type: 'spring', stiffness: 180, damping: 20 }}
-            className="fixed inset-0 z-30 flex items-center justify-center pointer-events-none"
+            initial={{ opacity: 0, clipPath: 'circle(0% at 50% 50%)' }}
+            animate={{ opacity: 1, clipPath: 'circle(150% at 50% 50%)' }}
+            exit={{ opacity: 0, clipPath: 'circle(0% at 50% 50%)' }}
+            transition={{ duration: 1.35, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden bg-black pointer-events-auto"
           >
-            <div className="relative pointer-events-auto flex flex-col items-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35, duration: 0.9 }}
+              className="absolute inset-0"
+              style={{
+                background:
+                  'radial-gradient(circle at center, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.78) 36%, #000 74%)',
+              }}
+            />
+            <div className="relative z-10 pointer-events-auto flex flex-col items-center">
 
-              {/* Outer radiant glow rings */}
-              {[500, 400, 320, 250].map((size, i) => (
-                <motion.div key={i} className="absolute rounded-full pointer-events-none"
-                  style={{
-                    width: size, height: size, top: '50%', left: '50%',
-                    marginLeft: -size / 2, marginTop: -size / 2,
-                    background: `radial-gradient(circle, rgba(200,220,255,${0.06 - i * 0.012}) 0%, rgba(120,160,255,${0.03 - i * 0.005}) 50%, transparent 70%)`,
-                    border: `1px solid rgba(180,210,255,${0.08 - i * 0.015})`,
-                  }}
-                  animate={{ opacity: [0.5, 0.2, 0.5], scale: [1, 1.08, 1] }}
-                  transition={{ duration: 3, delay: i * 0.5, repeat: Infinity, ease: 'easeInOut' }}
-                />
-              ))}
-
-              {/* White Hole SVG */}
               <button id="are-you-ready-btn" onClick={handleEnter}
-                className="relative cursor-pointer group"
-                style={{ background: 'none', border: 'none', padding: 0, width: 340, height: 340 }}
+                className="relative flex cursor-pointer flex-col items-center gap-4 border-0 bg-transparent p-0 text-white outline-none group"
+                style={{ perspective: 900 }}
               >
-                <svg viewBox="0 0 340 340" width="340" height="340">
-                  <defs>
-                    <filter id="wh-glow"><feGaussianBlur stdDeviation="8" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                    <filter id="wh-outer"><feGaussianBlur stdDeviation="20" /></filter>
-                    <filter id="wh-intense"><feGaussianBlur stdDeviation="12" /></filter>
-                    <radialGradient id="wh-core-g" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#ffffff" />
-                      <stop offset="30%" stopColor="rgba(200,225,255,0.95)" />
-                      <stop offset="60%" stopColor="rgba(130,170,255,0.5)" />
-                      <stop offset="100%" stopColor="transparent" />
-                    </radialGradient>
-                    <radialGradient id="wh-ring-g" cx="50%" cy="50%" r="50%">
-                      <stop offset="70%" stopColor="transparent" />
-                      <stop offset="82%" stopColor="rgba(160,200,255,0.6)" />
-                      <stop offset="90%" stopColor="rgba(200,225,255,0.9)" />
-                      <stop offset="95%" stopColor="rgba(255,255,255,1)" />
-                      <stop offset="100%" stopColor="rgba(160,200,255,0.3)" />
-                    </radialGradient>
-                  </defs>
-
-                  {/* Outer diffuse corona */}
-                  <circle cx="170" cy="170" r="160" fill="rgba(140,180,255,0.04)" filter="url(#wh-outer)" />
-                  <circle cx="170" cy="170" r="130" fill="rgba(180,210,255,0.06)" filter="url(#wh-outer)" />
-
-                  {/* Light rays emanating outward */}
-                  {Array.from({ length: 12 }).map((_, i) => {
-                    const angle = (i / 12) * Math.PI * 2;
-                    const x1 = 170 + Math.cos(angle) * 75;
-                    const y1 = 170 + Math.sin(angle) * 75;
-                    const x2 = 170 + Math.cos(angle) * 155;
-                    const y2 = 170 + Math.sin(angle) * 155;
-                    return (
-                      <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-                        stroke="rgba(200,225,255,0.12)" strokeWidth="2" filter="url(#wh-glow)" />
-                    );
-                  })}
-
-                  {/* Photon ring */}
-                  <circle cx="170" cy="170" r="80" fill="url(#wh-ring-g)" filter="url(#wh-glow)" />
-
-                  {/* Bright event horizon edge */}
-                  <circle cx="170" cy="170" r="72" fill="none" stroke="rgba(220,240,255,0.9)"
-                    strokeWidth="3" filter="url(#wh-glow)" />
-
-                  {/* White core — blinding center */}
-                  <circle cx="170" cy="170" r="68" fill="url(#wh-core-g)" />
-
-                  {/* Inner bright spot */}
-                  <circle cx="170" cy="170" r="30" fill="rgba(255,255,255,0.95)" filter="url(#wh-intense)" />
-                  <circle cx="170" cy="170" r="15" fill="#ffffff" />
-                </svg>
-
-                {/* Pulsing glow overlay */}
-                <motion.div className="absolute inset-0 rounded-full pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(200,225,255,0.15) 0%, transparent 60%)',
-                  }}
-                  animate={{ opacity: [0.5, 1, 0.5], scale: [0.95, 1.02, 0.95] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                />
+                <div
+                  className="relative pointer-events-none h-[360px] w-[min(560px,88vw)]"
+                  style={{ filter: 'drop-shadow(0 0 46px rgba(252,211,77,0.18))' }}
+                >
+                  <BlackHoleModel />
+                </div>
 
                 {/* Text inside — dark with star shimmer */}
-                <div className="absolute flex flex-col items-center justify-center pointer-events-none"
-                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 170 }}>
+                <div className="hidden"
+                  style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 240, zIndex: 8 }}>
                   {/* Shimmer CSS */}
                   <style>{`
                     @keyframes starShimmer {
@@ -350,57 +400,58 @@ export default function SpaceBackground() {
                     .shimmer-text {
                       background: linear-gradient(
                         105deg,
-                        #1a1a3a 0%,
-                        #1a1a3a 35%,
+                        #dff7ff 0%,
+                        #ffffff 35%,
                         #ffffff 42%,
-                        #c0d8ff 45%,
+                        #77e5ff 45%,
                         #ffffff 48%,
-                        #1a1a3a 55%,
-                        #1a1a3a 100%
+                        #dff7ff 55%,
+                        #ffffff 100%
                       );
                       background-size: 200% 100%;
                       -webkit-background-clip: text;
                       background-clip: text;
                       -webkit-text-fill-color: transparent;
                       animation: starShimmer 3s ease-in-out infinite;
+                      text-shadow: 0 0 10px rgba(255,255,255,0.95), 0 0 24px rgba(103,232,249,0.8), 0 2px 14px rgba(0,0,0,1);
                     }
                     .shimmer-text-sub {
-                      background: linear-gradient(
-                        105deg,
-                        rgba(150,180,220,0.4) 0%,
-                        rgba(150,180,220,0.4) 30%,
-                        rgba(255,255,255,0.9) 45%,
-                        rgba(200,220,255,0.8) 50%,
-                        rgba(150,180,220,0.4) 60%,
-                        rgba(150,180,220,0.4) 100%
-                      );
-                      background-size: 200% 100%;
-                      -webkit-background-clip: text;
-                      background-clip: text;
-                      -webkit-text-fill-color: transparent;
-                      animation: starShimmer 3s ease-in-out infinite;
-                      animation-delay: 0.5s;
+                      color: rgba(210,245,255,0.95);
+                      -webkit-text-fill-color: rgba(210,245,255,0.95);
+                      text-shadow: 0 0 10px rgba(103,232,249,0.9), 0 2px 10px #000;
                     }
                   `}</style>
                   <span className="shimmer-text font-black text-center leading-tight"
                     style={{
-                      fontSize: 14,
+                      fontSize: 16,
                       letterSpacing: '0.14em',
-                      filter: 'drop-shadow(0 0 6px rgba(180,210,255,0.6)) drop-shadow(0 0 20px rgba(100,150,255,0.3))',
+                      filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.85)) drop-shadow(0 0 20px rgba(103,232,249,0.65))',
                     }}>
                     ARE YOU READY<br />TO GO BEYOND?
                   </span>
                   <span className="shimmer-text-sub text-center mt-2 font-semibold"
-                    style={{ fontSize: 8, letterSpacing: '0.2em' }}>
+                    style={{ fontSize: 9, letterSpacing: '0.2em' }}>
                     ▶ CLICK TO ENTER HYPERSPACE
                   </span>
                 </div>
+                <motion.span
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.55 }}
+                  className="pointer-events-none text-center text-sm font-semibold uppercase text-cyan-100/90 transition group-hover:text-white"
+                  style={{
+                    letterSpacing: '0.22em',
+                    textShadow: '0 0 14px rgba(103,232,249,0.75), 0 0 30px rgba(255,255,255,0.22)',
+                  }}
+                >
+                  Click to enter black hole
+                </motion.span>
               </button>
 
               {/* Subtitle */}
               <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                className="mt-4 text-blue-200/40 text-xs tracking-[0.3em] uppercase">
-                approaching the white hole
+                className="hidden">
+                approaching the black hole
               </motion.p>
             </div>
           </motion.div>
@@ -409,7 +460,17 @@ export default function SpaceBackground() {
 
       {/* Warp Controls */}
       <div className="fixed bottom-6 inset-x-0 z-20 flex justify-center">
-        <div className="flex items-center gap-3 rounded-full bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 text-white">
+        <div className="relative flex items-center gap-3 rounded-full bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 text-white">
+          {warp < 10 && !hasClickedWarp && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: [0, -4, 0] }}
+              transition={{ opacity: { duration: 0.35 }, y: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' } }}
+              className="absolute -top-12 right-0 flex items-center gap-2 whitespace-nowrap rounded-full border border-cyan-300/25 bg-black/75 px-3 py-1.5 text-xs font-semibold tracking-wide text-cyan-100 shadow-[0_0_18px_rgba(103,232,249,0.25)]"
+            >
+              <span>Click + for warp</span>
+            </motion.div>
+          )}
           <button
             aria-label="Decrease warp"
             onClick={() => setWarp((w) => Math.max(1, w - 1))}
@@ -425,9 +486,16 @@ export default function SpaceBackground() {
           </span>
           <button
             aria-label="Increase warp"
-            onClick={() => setWarp((w) => Math.min(10, w + 1))}
-            className="h-8 w-8 flex items-center justify-center rounded-full border border-white/20 hover:bg-white/10 transition"
+            onClick={handleIncreaseWarp}
+            className="relative h-8 w-8 flex items-center justify-center rounded-full border border-white/20 hover:bg-white/10 transition"
           >
+            {warp < 10 && (
+              <motion.span
+                className="absolute inset-0 rounded-full border border-cyan-300/70"
+                animate={{ opacity: [0.9, 0], scale: [1, 1.85] }}
+                transition={{ duration: 1.25, repeat: Infinity, ease: 'easeOut' }}
+              />
+            )}
             +
           </button>
         </div>
@@ -435,3 +503,4 @@ export default function SpaceBackground() {
     </>
   );
 }
+
