@@ -7,11 +7,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // ── Mouse-controlled orbit camera ─────────────────────────────────────────
 function MouseOrbitCamera() {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
   const radius = useRef(38);
   const RADIUS_MIN = 5;
   const RADIUS_MAX = 80;
+  const focus = useRef(new THREE.Vector3(0, 0, 0));
+  const targetFocus = useRef(new THREE.Vector3(0, 0, 0));
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const viewPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const pointer = useMemo(() => new THREE.Vector2(), []);
+  const hitPoint = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -20,7 +26,24 @@ function MouseOrbitCamera() {
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      const rect = gl.domElement.getBoundingClientRect();
+      pointer.set(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      raycaster.setFromCamera(pointer, camera);
+      const hasHit = raycaster.ray.intersectPlane(viewPlane, hitPoint);
+      const previousRadius = radius.current;
       radius.current = Math.max(RADIUS_MIN, Math.min(RADIUS_MAX, radius.current + e.deltaY * 0.06));
+
+      if (hasHit && e.deltaY < 0) {
+        const zoomAmount = Math.min(0.42, Math.max(0.1, (previousRadius - radius.current) / previousRadius * 2.6));
+        targetFocus.current.lerp(hitPoint, zoomAmount);
+        targetFocus.current.x = THREE.MathUtils.clamp(targetFocus.current.x, -52, 52);
+        targetFocus.current.z = THREE.MathUtils.clamp(targetFocus.current.z, -52, 52);
+      } else if (e.deltaY > 0) {
+        targetFocus.current.lerp(new THREE.Vector3(0, 0, 0), 0.04);
+      }
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('wheel', onWheel, { passive: false });
@@ -28,19 +51,20 @@ function MouseOrbitCamera() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('wheel', onWheel);
     };
-  }, []);
+  }, [camera, gl, hitPoint, pointer, raycaster, viewPlane]);
 
   useFrame(() => {
     const azimuth = -mouse.current.x * Math.PI * 0.55;
     const elevation = mouse.current.y * Math.PI * 0.22;
+    focus.current.lerp(targetFocus.current, 0.07);
     const r = radius.current;
     const target = new THREE.Vector3(
       r * Math.sin(azimuth) * Math.cos(elevation),
       r * Math.sin(elevation),
       r * Math.cos(azimuth) * Math.cos(elevation),
-    );
+    ).add(focus.current);
     camera.position.lerp(target, 0.035);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(focus.current);
   });
 
   return null;
