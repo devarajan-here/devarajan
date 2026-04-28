@@ -76,7 +76,7 @@ function AtmosphereGlow({ size, color }: { size: number; color: string }) {
   const mat = useMemo(() => new THREE.MeshBasicMaterial({
     color,
     transparent: true,
-    opacity: 0.18,
+    opacity: 0.34,
     side: THREE.BackSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -128,15 +128,16 @@ function Planet({
   const mat = useMemo(() => new THREE.MeshStandardMaterial({
     map: texture,
     emissive: new THREE.Color(emissiveColor),
-    emissiveIntensity: hovered ? 0.45 : (isSOC ? 0.3 : 0.08),
-    roughness: 0.7,
-    metalness: 0.2,
+    emissiveIntensity: hovered ? 0.95 : (isSOC ? 0.7 : 0.46),
+    roughness: 0.48,
+    metalness: 0.12,
+    toneMapped: false,
   }), [texture, emissiveColor, hovered, isSOC]);
 
   const cloudMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: '#ffffff',
     transparent: true,
-    opacity: cloudOpacity,
+    opacity: Math.min(0.28, cloudOpacity + 0.08),
     roughness: 1,
     depthWrite: false,
   }), [cloudOpacity]);
@@ -146,7 +147,7 @@ function Planet({
   const ringMat = useMemo(() => hasRings ? new THREE.MeshBasicMaterial({
     color: ringColor ?? '#88aacc',
     transparent: true,
-    opacity: 0.38,
+    opacity: 0.62,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -157,7 +158,7 @@ function Planet({
   const socRingMat = useMemo(() => isSOC ? new THREE.MeshBasicMaterial({
     color: '#3b82f6',
     transparent: true,
-    opacity: hovered ? 0.7 : 0.45,
+    opacity: hovered ? 0.92 : 0.68,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -209,7 +210,7 @@ function Planet({
         <mesh geometry={socRingGeo} material={socRingMat} rotation={[Math.PI / 2.6, 0, 0]} />
       )}
 
-      {hovered && <pointLight color={emissiveColor} intensity={6} distance={8} decay={2} />}
+      <pointLight color={emissiveColor} intensity={hovered ? 9 : 2.4} distance={hovered ? 10 : 6} decay={2} />
 
       {/* Label */}
       <Billboard follow>
@@ -249,7 +250,7 @@ function OrbitRing({ radius, tilt }: { radius: number; tilt: number }) {
 
   return (
     <line geometry={geo}>
-      <lineBasicMaterial color="#3b82f6" transparent opacity={0.1} />
+      <lineBasicMaterial color="#60a5fa" transparent opacity={0.22} />
     </line>
   );
 }
@@ -278,7 +279,7 @@ function CentralStar() {
     if (meshRef.current) {
       const p = 1 + Math.sin(t * 2.2) * 0.06;
       meshRef.current.scale.set(p, p, p);
-      (meshRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.4 + Math.sin(t * 3.1) * 0.35;
+      (meshRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 2.1 + Math.sin(t * 3.1) * 0.45;
     }
     if (coronaRef.current) {
       coronaRef.current.rotation.z += 0.003;
@@ -292,7 +293,7 @@ function CentralStar() {
         <sphereGeometry args={[0.95, 48, 48]} />
         <meshStandardMaterial
           map={new THREE.TextureLoader().load('/textures/sun.jpg')}
-          emissive="#ff6600" emissiveIntensity={1.6} roughness={0.05} metalness={0.7}
+          emissive="#ff6600" emissiveIntensity={2.3} roughness={0.05} metalness={0.7} toneMapped={false}
         />
       </mesh>
       {/* Corona plane */}
@@ -300,8 +301,8 @@ function CentralStar() {
         <planeGeometry args={[6, 6]} />
         <meshBasicMaterial map={coronaTex} transparent alphaMap={coronaTex} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight color="#3b82f6" intensity={10} distance={24} decay={2} />
-      <pointLight color="#60a5fa" intensity={3} distance={40} decay={2} />
+      <pointLight color="#3b82f6" intensity={16} distance={34} decay={2} />
+      <pointLight color="#60a5fa" intensity={7} distance={54} decay={2} />
     </group>
   );
 }
@@ -334,7 +335,7 @@ function GalaxyBackground() {
   useFrame((_, d) => { if (ref.current) ref.current.rotation.y += d * 0.03; });
   return (
     <points ref={ref} geometry={geo}>
-      <pointsMaterial size={0.07} vertexColors transparent opacity={0.65}
+      <pointsMaterial size={0.08} vertexColors transparent opacity={0.82}
         blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
     </points>
   );
@@ -490,7 +491,8 @@ export default function GalaxyView() {
         <Stars radius={90} depth={60} count={5000} factor={4} fade speed={0.4} />
         <GalaxyBackground />
         <OrbitScrollCamera initialRadius={14} />
-        <ambientLight intensity={0.08} />
+        <ambientLight intensity={0.42} />
+        <hemisphereLight args={['#dbeafe', '#1e1b4b', 0.9]} />
         <CentralStar />
 
         {PLANETS.map((p) => (
