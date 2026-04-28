@@ -32,8 +32,18 @@ export default function Landing() {
   const [showPhotoModel, setShowPhotoModel] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowPhotoModel(true), 1200);
-    return () => window.clearTimeout(timer);
+    const loadPhotoModel = () => setShowPhotoModel(true);
+    const idleCallback = 'requestIdleCallback' in window
+      ? window.requestIdleCallback(loadPhotoModel, { timeout: 6500 })
+      : undefined;
+    const timer = idleCallback
+      ? undefined
+      : window.setTimeout(loadPhotoModel, 6500);
+
+    return () => {
+      if (idleCallback) window.cancelIdleCallback(idleCallback);
+      if (timer) window.clearTimeout(timer);
+    };
   }, []);
   const projectsData: Record<
     string,

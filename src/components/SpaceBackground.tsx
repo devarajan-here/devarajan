@@ -276,6 +276,18 @@ export default function SpaceBackground() {
   }, [warp]);
 
   useEffect(() => {
+    if (warp < 8 || document.querySelector('link[href="/assets/blackhole.glb"]')) return;
+
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.href = '/assets/blackhole.glb';
+    link.as = 'fetch';
+    link.type = 'model/gltf-binary';
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+  }, [warp]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
