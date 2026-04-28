@@ -9,6 +9,7 @@ import {
   Calendar,
   ExternalLink,
   Github,
+  Instagram,
   Linkedin,
   Mail,
   MapPin,
@@ -199,6 +200,16 @@ export default function Landing() {
                   <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                 </a>
                 <span className="opacity-40">•</span>
+                <a
+                  href="https://www.instagram.com/dev_raj_an_/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 hover:text-white transition group"
+                >
+                  <Instagram className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" /> Instagram
+                  <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </a>
+                <span className="opacity-40">â€¢</span>
                 <span className="inline-flex items-center gap-2">
                   <MapPin className="w-4 h-4" /> Kerala, India
                 </span>
@@ -517,6 +528,16 @@ export default function Landing() {
                 >
                   <a href="https://www.github.com/devarajan-here" target="_blank" rel="noopener noreferrer" aria-label="Open GitHub profile">
                     <Github className="w-5 h-5 transition-transform group-hover:scale-110" />
+                  </a>
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="bg-transparent border-white/20 text-white hover:bg-white/10 group"
+                  asChild
+                >
+                  <a href="https://www.instagram.com/dev_raj_an_/" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram profile">
+                    <Instagram className="w-5 h-5 transition-transform group-hover:scale-110" />
                   </a>
                 </Button>
               </div>

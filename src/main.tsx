@@ -3,6 +3,7 @@ import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
 import { InstrumentationProvider } from "@/instrumentation.tsx";
 import AuthPage from "@/pages/Auth.tsx";
 import { BackgroundMusic } from "@/components/BackgroundMusic.tsx";
+import { ThemeToggle } from "@/components/ThemeToggle.tsx";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { StrictMode, useEffect } from "react";
@@ -61,6 +62,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/soc/:domain" element={<SocDomain />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ThemeToggle />
         </BrowserRouter>
         <Toaster />
         <BackgroundMusic />
