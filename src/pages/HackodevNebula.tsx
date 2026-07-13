@@ -282,22 +282,32 @@ function NebulaDust() {
   );
 }
 
-// ── Custom Skybox component ──────────────────────────────────────────────
-function Skybox() {
+// ── Custom SkySphere component (replaces cubemap with repeating sphere) ───
+function SkySphere() {
   const { scene } = useThree();
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+
   useEffect(() => {
-    const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-      '/textures/skybox/px.png?v=4k',
-      '/textures/skybox/nx.png?v=4k',
-      '/textures/skybox/py.png?v=4k',
-      '/textures/skybox/ny.png?v=4k',
-      '/textures/skybox/pz.png?v=4k',
-      '/textures/skybox/nz.png?v=4k',
-    ]);
-    scene.background = texture;
+    // Clear standard cubemap background
+    scene.background = null;
+
+    const loader = new THREE.TextureLoader();
+    loader.load('/textures/skybox/stars.png?v=2', (tex) => {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(8, 6); // Repeat the space image seamlessly across the sphere
+      setTexture(tex);
+    });
   }, [scene]);
-  return null;
+
+  if (!texture) return null;
+
+  return (
+    <mesh>
+      <sphereGeometry args={[200, 60, 40]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} depthWrite={false} />
+    </mesh>
+  );
 }
 
 // ── Galaxies — spread far apart ───────────────────────────────────────────
@@ -398,7 +408,7 @@ export default function HackodevNebula() {
 
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 6, 38], fov: 65 }} gl={{ antialias: true }}>
-        <Skybox />
+        <SkySphere />
         <Stars radius={150} depth={100} count={12000} factor={6} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
         <MouseOrbitCamera focusTarget={hoveredGalaxy?.position ?? null} />
