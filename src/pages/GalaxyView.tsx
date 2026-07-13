@@ -168,7 +168,7 @@ function Planet({
     angleRef.current += delta * orbitSpeed;
     if (groupRef.current) {
       groupRef.current.position.x = Math.cos(angleRef.current) * orbitRadius;
-      groupRef.current.position.y = Math.sin(angleRef.current * 0.3) * orbitTilt;
+      groupRef.current.position.y = Math.sin(angleRef.current) * orbitTilt;
       groupRef.current.position.z = Math.sin(angleRef.current) * orbitRadius;
     }
     if (meshRef.current) {
@@ -243,7 +243,7 @@ function OrbitRing({ radius, tilt }: { radius: number; tilt: number }) {
     const pts: THREE.Vector3[] = [];
     for (let i = 0; i <= 128; i++) {
       const a = (i / 128) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a * 0.3) * tilt, Math.sin(a) * radius));
+      pts.push(new THREE.Vector3(Math.cos(a) * radius, Math.sin(a) * tilt, Math.sin(a) * radius));
     }
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, [radius, tilt]);
@@ -481,7 +481,7 @@ export default function GalaxyView() {
       <motion.button initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
         onClick={() => navigate('/nebula')}
         className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all text-sm">
-        ← Hackodev Nebula
+        ← Back
       </motion.button>
 
       {/* Canvas */}

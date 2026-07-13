@@ -46,7 +46,7 @@ function BlackHoleModel() {
     scene.add(group);
 
     const loader = new GLTFLoader();
-    loader.load('/assets/blackhole.glb', (gltf) => {
+    loader.load('/assets/spiral_galaxy.glb', (gltf) => {
       const model = gltf.scene;
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
