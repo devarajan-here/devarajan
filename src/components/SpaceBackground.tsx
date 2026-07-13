@@ -61,16 +61,25 @@ function BlackHoleModel() {
         if (obj.isMesh) {
           obj.frustumCulled = false;
           const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-          for (const material of materials) {
-            if (material && 'emissiveIntensity' in material) {
-              material.emissiveIntensity = Math.max(material.emissiveIntensity ?? 0, 0.35);
-            }
-            if (material && 'needsUpdate' in material) material.needsUpdate = true;
-          }
+          const newMats = materials.map((material) => {
+            if (!material) return material;
+            return new THREE.MeshBasicMaterial({
+              map: material.map || null,
+              color: material.color || new THREE.Color(0xffffff),
+              transparent: true,
+              opacity: material.opacity !== undefined ? material.opacity : 1.0,
+              side: THREE.DoubleSide,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending, // Glowing additive blending
+            });
+          });
+          obj.material = Array.isArray(obj.material) ? newMats : newMats[0];
         }
       });
 
       group.add(model);
+    }, undefined, (err) => {
+      console.error('Error loading spiral_galaxy.glb:', err);
     });
 
     let raf = 0;
