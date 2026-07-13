@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars, Text, Billboard } from '@react-three/drei';
+import { Stars, Text, Billboard, useGLTF } from '@react-three/drei';
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useNavigate } from 'react-router';
@@ -60,6 +60,13 @@ function MouseOrbitCamera({ focusTarget }: { focusTarget: [number, number, numbe
   return null;
 }
 
+// ── GLTF Model Helper Component ───────────────────────────────────────────
+function GLTFModel({ path }: { path: string }) {
+  const { scene } = useGLTF(path);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
+  return <primitive object={clonedScene} scale={[12, 12, 12]} />;
+}
+
 // ── Galaxy particle cluster ───────────────────────────────────────────────
 interface GalaxyProps {
   position: [number, number, number];
@@ -69,9 +76,10 @@ interface GalaxyProps {
   hovered: boolean;
   onPointerOver: () => void;
   onPointerOut: () => void;
+  modelPath?: string;
 }
 
-function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver, onPointerOut }: GalaxyProps) {
+function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver, onPointerOut, modelPath }: GalaxyProps) {
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Mesh>(null);
   const scaleVec = useMemo(() => new THREE.Vector3(), []);
@@ -197,25 +205,31 @@ function GalaxyCluster({ position, color, name, onClick, hovered, onPointerOver,
   return (
     <group position={position}>
       <group ref={groupRef} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
-        {/* Main spiral stars */}
-        <points geometry={mainGeo} material={mainMat} />
-        {/* Dust halo */}
-        <points geometry={dustGeo} material={dustMat} />
-        {/* Glowing core */}
-        <mesh ref={coreRef}>
-          <sphereGeometry args={[1.8, 32, 32]} />
-          <meshBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.45}
-            blending={THREE.AdditiveBlending} depthWrite={false} />
-        </mesh>
-        {/* Core glow plane */}
-        <mesh rotation={[0, 0, 0]}>
-          <planeGeometry args={[12, 12]} />
-          <meshBasicMaterial map={coreTex} transparent depthWrite={false}
-            blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-            opacity={hovered ? 0.8 : 0.5} />
-        </mesh>
-        {/* Outer ring */}
-        <mesh geometry={ringGeo} material={ringMat} rotation={[Math.PI / 2, 0, 0]} />
+        {modelPath ? (
+          <GLTFModel path={modelPath} />
+        ) : (
+          <>
+            {/* Main spiral stars */}
+            <points geometry={mainGeo} material={mainMat} />
+            {/* Dust halo */}
+            <points geometry={dustGeo} material={dustMat} />
+            {/* Glowing core */}
+            <mesh ref={coreRef}>
+              <sphereGeometry args={[1.8, 32, 32]} />
+              <meshBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.45}
+                blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            {/* Core glow plane */}
+            <mesh rotation={[0, 0, 0]}>
+              <planeGeometry args={[12, 12]} />
+              <meshBasicMaterial map={coreTex} transparent depthWrite={false}
+                blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+                opacity={hovered ? 0.8 : 0.5} />
+            </mesh>
+            {/* Outer ring */}
+            <mesh geometry={ringGeo} material={ringMat} rotation={[Math.PI / 2, 0, 0]} />
+          </>
+        )}
         {/* Clickable hitbox */}
         <mesh>
           <sphereGeometry args={[15, 12, 12]} />
@@ -312,7 +326,7 @@ function SkySphere() {
 
 // ── Galaxies — spread far apart ───────────────────────────────────────────
 const GALAXIES = [
-  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-38,  6,  4] as [number,number,number], route: '/nebula/blue-team' },
+  { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-38,  6,  4] as [number,number,number], route: '/nebula/blue-team', modelPath: '/assets/spiral_galaxy.glb' },
   { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 35, -8,-14] as [number,number,number], route: null },
   { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  4, 18,-40] as [number,number,number], route: null },
   { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-20,-18,-32] as [number,number,number], route: null },
@@ -426,6 +440,7 @@ export default function HackodevNebula() {
             onPointerOver={() => setHoveredId(g.id)}
             onPointerOut={() => setHoveredId(null)}
             onClick={() => handleGalaxyClick(g)}
+            modelPath={g.modelPath}
           />
         ))}
       </Canvas>
