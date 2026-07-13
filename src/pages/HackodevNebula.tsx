@@ -334,8 +334,20 @@ export default function HackodevNebula() {
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 flex flex-col items-center pt-8 pointer-events-none">
         <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1 }}>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-[0.25em] bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent text-center">
-            HACKODEV NEBULA
+          <style>{`
+            .hover-space-title {
+              color: #ffffff;
+              text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+              transition: all 0.5s ease;
+            }
+            .hover-space-title:hover {
+              letter-spacing: 0.35em;
+              text-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(130, 170, 255, 0.6);
+              transform: translateY(-2px);
+            }
+          `}</style>
+          <h1 className="hover-space-title text-3xl md:text-5xl font-bold tracking-[0.25em] text-center cursor-default pointer-events-auto">
+            HACKERS INTERGALACTIC SPACE
           </h1>
           <p className="mt-2 text-white/45 text-xs tracking-widest uppercase text-center">
             Move your mouse to explore · Click a galaxy to enter
