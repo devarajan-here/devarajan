@@ -293,9 +293,9 @@ function SkySphere({ texturePath }: { texturePath: string }) {
 
     const loader = new THREE.TextureLoader();
     loader.load(texturePath, (tex) => {
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(8, 6); // Repeat the space image seamlessly across the sphere
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.repeat.set(1, 1); // Render one single continuous image across the entire sphere
       setTexture(tex);
     });
   }, [scene, texturePath]);
