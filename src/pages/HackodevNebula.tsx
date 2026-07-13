@@ -331,6 +331,7 @@ export default function HackodevNebula() {
   const SCENERIES = useMemo(() => [
     { name: 'Classic Stars', path: '/textures/skybox/stars.png?v=2' },
     { name: 'Emerald Nebula', path: '/textures/skybox/stars_green.png?v=2' },
+    { name: 'Amethyst Cosmos', path: '/textures/skybox/stars_purple.png?v=2' },
   ], []);
 
   const hoveredGalaxy = useMemo(
