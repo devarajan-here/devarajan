@@ -215,7 +215,7 @@ function Planet({
       {/* Label */}
       <Billboard follow>
         <Text position={[0, size + 0.5, 0]} fontSize={hovered ? 0.3 : 0.22}
-          color={hovered ? '#ffffff' : '#ffffffaa'} anchorX="center" anchorY="middle">
+          color={hovered ? '#ffffff' : '#d1d5db'} anchorX="center" anchorY="middle">
           {name}
         </Text>
         {hovered && isSOC && (

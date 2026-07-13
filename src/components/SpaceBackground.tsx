@@ -11,21 +11,58 @@ interface Star {
   prevZ: number;
 }
 
-function BlackHoleModel() {
+interface SpaceBackgroundProps {
+  onGalaxyActiveChange?: (active: boolean) => void;
+}
+
+const BLACK_HOLE_MODEL_URL = '/assets/blackhole_skybox_web.glb';
+let blackHoleScenePromise: Promise<THREE.Object3D> | null = null;
+
+function keepBlackHoleDisplayPlane(model: THREE.Object3D) {
+  const meshesToRemove: THREE.Mesh[] = [];
+  model.traverse((obj: any) => {
+    if (!obj.isMesh) return;
+    const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+    const isDisplayPlane = materials.some((material: THREE.Material | undefined) => material?.name === 'sky1');
+    if (!isDisplayPlane) meshesToRemove.push(obj);
+  });
+  meshesToRemove.forEach((mesh) => mesh.parent?.remove(mesh));
+  return model;
+}
+
+function preloadBlackHoleModel() {
+  if (!blackHoleScenePromise) {
+    blackHoleScenePromise = new Promise((resolve, reject) => {
+      new GLTFLoader().load(
+        BLACK_HOLE_MODEL_URL,
+        (gltf) => resolve(keepBlackHoleDisplayPlane(gltf.scene)),
+        undefined,
+        (error) => {
+          blackHoleScenePromise = null;
+          reject(error);
+        },
+      );
+    });
+  }
+
+  return blackHoleScenePromise!;
+}
+
+function BlackHoleSkyboxModel() {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    const width = mount.clientWidth || 440;
-    const height = mount.clientHeight || 440;
+    const width = mount.clientWidth || 820;
+    const height = mount.clientHeight || 520;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.01, 100);
-    camera.position.set(0, 0.15, 3.75);
+    camera.position.set(0, 0, 4.25);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
+    renderer.setPixelRatio(1);
     renderer.setSize(width, height);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -45,49 +82,52 @@ function BlackHoleModel() {
     const group = new THREE.Group();
     scene.add(group);
 
-    const loader = new GLTFLoader();
-    loader.load('/assets/spiral_galaxy.glb', (gltf) => {
-      const model = gltf.scene;
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const maxSize = Math.max(size.x, size.y, size.z) || 1;
+    let disposed = false;
+    let loadedModel: THREE.Object3D | null = null;
+    let loadedModelMaxSize = 1;
+    const fitModelToViewport = () => {
+      if (!loadedModel) return;
+      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+      const viewWidth = viewHeight * camera.aspect;
+      const coverSize = Math.max(viewWidth, viewHeight) * 1.08;
+      loadedModel.scale.setScalar(coverSize / loadedModelMaxSize);
+    };
 
-      model.position.sub(center);
-      model.scale.setScalar(3.05 / maxSize);
-      model.rotation.x = -0.28;
-
-      model.traverse((obj: any) => {
-        if (obj.isMesh) {
-          obj.frustumCulled = false;
-          const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-          const newMats = materials.map((material) => {
-            if (!material) return material;
-            return new THREE.MeshBasicMaterial({
-              map: material.map || null,
-              color: material.color || new THREE.Color(0xffffff),
-              transparent: true,
-              opacity: material.opacity !== undefined ? material.opacity : 1.0,
-              side: THREE.DoubleSide,
-              depthWrite: false,
-              blending: THREE.AdditiveBlending, // Glowing additive blending
-            });
-          });
-          obj.material = Array.isArray(obj.material) ? newMats : newMats[0];
-        }
+    preloadBlackHoleModel().then((sourceModel) => {
+      if (disposed) return;
+      let displayTexture: THREE.Texture | null = null;
+      sourceModel.traverse((obj: any) => {
+        if (!obj.isMesh || displayTexture) return;
+        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        const texturedMaterial = materials.find((material: any) => material?.map);
+        if (texturedMaterial?.map) displayTexture = texturedMaterial.map;
       });
+      if (!displayTexture) throw new Error('Black-hole display texture is missing');
 
-      group.add(model);
-    }, undefined, (err) => {
-      console.error('Error loading spiral_galaxy.glb:', err);
+      const screenPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 2),
+        new THREE.MeshBasicMaterial({
+          map: displayTexture,
+          color: 0xffffff,
+          toneMapped: false,
+          depthWrite: false,
+        }),
+      );
+      screenPlane.frustumCulled = false;
+      loadedModel = screenPlane;
+      loadedModelMaxSize = 2;
+      fitModelToViewport();
+      group.add(screenPlane);
+    }).catch((err) => {
+      console.error('Error loading blackhole_skybox.glb:', err);
     });
 
     let raf = 0;
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
-      group.rotation.y = elapsed * 0.35;
-      group.rotation.z = Math.sin(elapsed * 0.55) * 0.045;
+      group.rotation.y = 0;
+      group.rotation.z = Math.sin(elapsed * 0.35) * 0.018;
       group.scale.setScalar(1 + Math.sin(elapsed * 1.2) * 0.025);
       renderer.render(scene, camera);
       raf = requestAnimationFrame(animate);
@@ -95,19 +135,27 @@ function BlackHoleModel() {
     animate();
 
     const onResize = () => {
-      const nextWidth = mount.clientWidth || 440;
-      const nextHeight = mount.clientHeight || 440;
+      const nextWidth = mount.clientWidth || 820;
+      const nextHeight = mount.clientHeight || 520;
       camera.aspect = nextWidth / nextHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(nextWidth, nextHeight);
+      fitModelToViewport();
     };
     window.addEventListener('resize', onResize);
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
-      mount.removeChild(renderer.domElement);
+      loadedModel?.traverse((obj: any) => {
+        obj.geometry?.dispose?.();
+        const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+        materials.forEach((material: THREE.Material | undefined) => material?.dispose());
+      });
+      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
       renderer.dispose();
+      renderer.forceContextLoss();
     };
   }, []);
 
@@ -115,7 +163,7 @@ function BlackHoleModel() {
     <div
       ref={mountRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 6, filter: 'drop-shadow(0 0 34px rgba(103,232,249,0.45))' }}
+      style={{ zIndex: 6 }}
       aria-hidden="true"
     />
   );
@@ -258,7 +306,7 @@ function HyperspaceWarp({ onComplete }: { onComplete: () => void }) {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────
-export default function SpaceBackground() {
+export default function SpaceBackground({ onGalaxyActiveChange }: SpaceBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<Star[]>([]);
   const speedRef = useRef(0.5);
@@ -266,6 +314,12 @@ export default function SpaceBackground() {
   const [hasClickedWarp, setHasClickedWarp] = useState(false);
   const [entering, setEntering] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void preloadBlackHoleModel().catch((error) => {
+      console.error('Error preloading blackhole_skybox.glb:', error);
+    });
+  }, []);
 
   const handleEnter = useCallback(() => {
     setEntering(true);
@@ -285,16 +339,10 @@ export default function SpaceBackground() {
   }, [warp]);
 
   useEffect(() => {
-    if (warp < 8 || document.querySelector('link[href="/assets/blackhole.glb"]')) return;
-
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = '/assets/blackhole.glb';
-    link.as = 'fetch';
-    link.type = 'model/gltf-binary';
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
-  }, [warp]);
+    // Release the other large WebGL scenes as soon as the warp sequence starts,
+    // well before the galaxy GLB needs its own context at warp 10.
+    onGalaxyActiveChange?.(warp > 1);
+  }, [onGalaxyActiveChange, warp]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -396,17 +444,16 @@ export default function SpaceBackground() {
                   'radial-gradient(circle at center, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.78) 36%, #000 74%)',
               }}
             />
-            <div className="relative z-10 pointer-events-auto flex flex-col items-center">
+            <div className="relative z-10 h-full w-full pointer-events-auto">
 
               <button id="are-you-ready-btn" onClick={handleEnter}
-                className="relative flex cursor-pointer flex-col items-center gap-4 border-0 bg-transparent p-0 text-white outline-none group"
+                className="relative flex h-full w-full cursor-pointer items-end justify-center border-0 bg-transparent pb-[14vh] text-white outline-none group"
                 style={{ perspective: 900 }}
               >
                 <div
-                  className="relative pointer-events-none h-[420px] w-[min(650px,92vw)]"
-                  style={{ filter: 'drop-shadow(0 0 46px rgba(252,211,77,0.18))' }}
+                  className="absolute inset-0 pointer-events-none"
                 >
-                  <BlackHoleModel />
+                  <BlackHoleSkyboxModel />
                 </div>
 
                 {/* Text inside — dark with star shimmer */}
@@ -459,13 +506,13 @@ export default function SpaceBackground() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8, duration: 0.55 }}
-                  className="pointer-events-none text-center text-sm font-semibold uppercase text-cyan-100/90 transition group-hover:text-white"
+                  className="relative z-10 pointer-events-none text-center text-sm font-semibold uppercase text-cyan-100/90 transition group-hover:text-white"
                   style={{
                     letterSpacing: '0.22em',
                     textShadow: '0 0 14px rgba(103,232,249,0.75), 0 0 30px rgba(255,255,255,0.22)',
                   }}
                 >
-                  Click to enter black hole
+                  Click to enter the black hole
                 </motion.span>
               </button>
 

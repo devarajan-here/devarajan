@@ -30,19 +30,15 @@ export default function Landing() {
   const [projectOpen, setProjectOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [showPhotoModel, setShowPhotoModel] = useState(false);
+  const [galaxyActive, setGalaxyActive] = useState(false);
 
   useEffect(() => {
-    const loadPhotoModel = () => setShowPhotoModel(true);
-    const idleCallback = 'requestIdleCallback' in window
-      ? window.requestIdleCallback(loadPhotoModel, { timeout: 6500 })
-      : undefined;
-    const timer = idleCallback
-      ? undefined
-      : window.setTimeout(loadPhotoModel, 6500);
+    // Keep the initial load focused on the galaxy and spaceship assets. The
+    // photo GLB is another ~60 MB and previously competed with galaxy preload.
+    const timer = window.setTimeout(() => setShowPhotoModel(true), 30000);
 
     return () => {
-      if (idleCallback) window.cancelIdleCallback(idleCallback);
-      if (timer) window.clearTimeout(timer);
+      window.clearTimeout(timer);
     };
   }, []);
   const projectsData: Record<
@@ -130,11 +126,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden">
-      <SpaceBackground />
+      <SpaceBackground onGalaxyActiveChange={setGalaxyActive} />
       {/* 3D Spaceship Layer */}
-      <Spaceship />
+      {!galaxyActive && <Spaceship />}
       {/* 3D Photo Layer */}
-      {showPhotoModel && <Photo />}
+      {showPhotoModel && !galaxyActive && <Photo />}
 
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center relative z-10 px-4">

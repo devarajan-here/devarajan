@@ -337,6 +337,7 @@ export default function Spaceship() {
       window.removeEventListener("mousemove", onMouseMove);
       mount.removeChild(renderer.domElement);
       renderer.dispose();
+      renderer.forceContextLoss();
       starsGeo.dispose();
       warpStreaksGeo.dispose();
       warpStreaksMat.dispose();

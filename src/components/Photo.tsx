@@ -185,6 +185,7 @@ export default function Photo() {
       window.removeEventListener("mousemove", onMouseMove);
       mount.removeChild(renderer.domElement);
       renderer.dispose();
+      renderer.forceContextLoss();
       starsGeo.dispose();
     };
   }, []);
