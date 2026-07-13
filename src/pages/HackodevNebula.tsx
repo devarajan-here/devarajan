@@ -79,7 +79,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
   const baseColor = useMemo(() => new THREE.Color(color), [color]);
   const isBlackHole = id === 'blue-team';
 
-  // Accretion disk custom texture for the Black Hole
+  // Accretion disk custom texture for the Black Hole (in futuristic electric blue)
   const blackHoleTex = useMemo(() => {
     if (!isBlackHole) return null;
     const canvas = document.createElement('canvas');
@@ -87,14 +87,14 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
     canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
 
-    // Create a multi-stop radial gradient for the hot gas/accretion disk
+    // Create a multi-stop radial gradient for the blue accretion disk
     const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
     grad.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Blinding center core
-    grad.addColorStop(0.12, 'rgba(255, 200, 80, 1)'); // White-hot inner ring
-    grad.addColorStop(0.24, 'rgba(255, 90, 0, 0.9)'); // Bright orange accretion fire
-    grad.addColorStop(0.38, 'rgba(230, 40, 10, 0.7)'); // Darker red/orange dust
-    grad.addColorStop(0.55, 'rgba(40, 90, 230, 0.35)'); // Blue/cyan outer space cloud
-    grad.addColorStop(0.9, 'rgba(20, 30, 100, 0.05)'); // Soft cosmic purple fade
+    grad.addColorStop(0.12, 'rgba(200, 240, 255, 1)'); // White-blue inner ring
+    grad.addColorStop(0.24, 'rgba(0, 168, 255, 0.9)'); // Bright electric blue accretion fire
+    grad.addColorStop(0.38, 'rgba(0, 80, 230, 0.7)'); // Darker deep blue dust
+    grad.addColorStop(0.55, 'rgba(124, 58, 237, 0.35)'); // Indigo/purple outer space cloud
+    grad.addColorStop(0.9, 'rgba(67, 56, 202, 0.05)'); // Soft cosmic violet fade
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
     ctx.fillStyle = grad;
@@ -117,8 +117,8 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const white = new THREE.Color('#ffffff');
-    const orange = new THREE.Color('#ff8500');
-    const blue = new THREE.Color('#0ea5e9');
+    const blue = new THREE.Color('#00a8ff');
+    const purple = new THREE.Color('#7c3aed');
 
     for (let i = 0; i < count; i++) {
       if (isBlackHole) {
@@ -132,13 +132,13 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
         positions[i * 3 + 1] = y;
         positions[i * 3 + 2] = Math.sin(theta) * r;
 
-        // Color mapping: inner white/orange, middle orange/red, outer blue/cyan
+        // Color mapping: inner white/cyan, middle electric blue, outer purple/indigo
         const t = (r - 2.8) / 16.5; // 0 to 1
-        let c = orange.clone();
+        let c = blue.clone();
         if (t < 0.15) {
           c.lerp(white, 1 - (t / 0.15)); // Inner hot white
         } else if (t > 0.4) {
-          c.lerp(blue, (t - 0.4) / 0.6); // Outer blue space gas
+          c.lerp(purple, (t - 0.4) / 0.6); // Outer purple space gas
         }
 
         const b = 0.5 + Math.random() * 0.5;
@@ -175,7 +175,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
     const count = 2000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
-    const orangeColor = new THREE.Color('#ff8500');
+    const blueColor = new THREE.Color('#3b82f6');
 
     for (let i = 0; i < count; i++) {
       const r = 3 + Math.random() * 16;
@@ -186,7 +186,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
       positions[i * 3 + 2] = Math.sin(theta) * r * Math.cos(phi);
       const b = 0.3 + Math.random() * 0.3;
 
-      const targetCol = isBlackHole ? orangeColor : baseColor;
+      const targetCol = isBlackHole ? blueColor : baseColor;
       colors[i * 3] = targetCol.r * b;
       colors[i * 3 + 1] = targetCol.g * b;
       colors[i * 3 + 2] = targetCol.b * b;
@@ -246,7 +246,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
 
   const ringGeo = useMemo(() => new THREE.RingGeometry(14, 15.5, 80), []);
   const ringMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: isBlackHole ? '#ff6c00' : color, 
+    color: isBlackHole ? '#00e5ff' : color, 
     transparent: true, 
     opacity: hovered ? 0.35 : 0.08,
     side: THREE.DoubleSide, 
