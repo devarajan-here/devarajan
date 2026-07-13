@@ -77,24 +77,42 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
   const coreRef = useRef<THREE.Mesh>(null);
   const scaleVec = useMemo(() => new THREE.Vector3(), []);
   const baseColor = useMemo(() => new THREE.Color(color), [color]);
-  const isBlackHole = id === 'blue-team';
 
-  // Accretion disk custom texture for the Black Hole (in futuristic electric blue)
+  // Compute complementary secondary color for outer accretion disk rim based on color
+  const secondaryColor = useMemo(() => {
+    const sec = baseColor.clone();
+    if (color === '#3b82f6') { // Blue
+      sec.set('#7c3aed'); // Violet
+    } else if (color === '#ef4444') { // Red
+      sec.set('#ffaa00'); // Orange/Yellow
+    } else if (color === '#10b981') { // Green
+      sec.set('#00e5ff'); // Cyan
+    } else if (color === '#a855f7') { // Purple
+      sec.set('#0088ff'); // Blue
+    } else if (color === '#f59e0b') { // Yellow/Orange
+      sec.set('#ff3c00'); // Red
+    }
+    return sec;
+  }, [baseColor, color]);
+
+  // Accretion disk custom texture for the Black Hole (dynamically colored)
   const blackHoleTex = useMemo(() => {
-    if (!isBlackHole) return null;
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
 
-    // Create a multi-stop radial gradient for the blue accretion disk
+    const c = baseColor;
+    const sec = secondaryColor;
+
+    // Create a multi-stop radial gradient for the dynamic accretion disk
     const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
     grad.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Blinding center core
-    grad.addColorStop(0.12, 'rgba(200, 240, 255, 1)'); // White-blue inner ring
-    grad.addColorStop(0.24, 'rgba(0, 168, 255, 0.9)'); // Bright electric blue accretion fire
-    grad.addColorStop(0.38, 'rgba(0, 80, 230, 0.7)'); // Darker deep blue dust
-    grad.addColorStop(0.55, 'rgba(124, 58, 237, 0.35)'); // Indigo/purple outer space cloud
-    grad.addColorStop(0.9, 'rgba(67, 56, 202, 0.05)'); // Soft cosmic violet fade
+    grad.addColorStop(0.12, `rgba(${Math.floor(THREE.MathUtils.lerp(255, c.r * 255, 0.4))}, ${Math.floor(THREE.MathUtils.lerp(255, c.g * 255, 0.4))}, ${Math.floor(THREE.MathUtils.lerp(255, c.b * 255, 0.4))}, 1)`); // Tinted inner ring
+    grad.addColorStop(0.24, `rgba(${Math.floor(c.r * 255)}, ${Math.floor(c.g * 255)}, ${Math.floor(c.b * 255)}, 0.95)`); // Main color
+    grad.addColorStop(0.38, `rgba(${Math.floor(THREE.MathUtils.lerp(c.r * 255, sec.r * 255, 0.3))}, ${Math.floor(THREE.MathUtils.lerp(c.g * 255, sec.g * 255, 0.3))}, ${Math.floor(THREE.MathUtils.lerp(c.b * 255, sec.b * 255, 0.3))}, 0.75)`);
+    grad.addColorStop(0.55, `rgba(${Math.floor(sec.r * 255)}, ${Math.floor(sec.g * 255)}, ${Math.floor(sec.b * 255)}, 0.35)`); // Secondary color outer glow
+    grad.addColorStop(0.9, `rgba(${Math.floor(sec.r * 120)}, ${Math.floor(sec.g * 120)}, ${Math.floor(sec.b * 120)}, 0.05)`); // Edge fade
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
     ctx.fillStyle = grad;
@@ -108,74 +126,52 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
     ctx.globalCompositeOperation = 'source-over';
 
     return new THREE.CanvasTexture(canvas);
-  }, [isBlackHole]);
+  }, [baseColor, secondaryColor]);
 
-  // Main particles (Spiral stars or Accretion disk)
+  // Main particles (Accretion disk)
   const { positions: mainPos, colors: mainCol, sizes } = useMemo(() => {
-    const count = isBlackHole ? 15000 : 8000;
+    const count = 15000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const white = new THREE.Color('#ffffff');
-    const blue = new THREE.Color('#00a8ff');
-    const purple = new THREE.Color('#7c3aed');
+    const primary = baseColor.clone();
+    const sec = secondaryColor.clone();
 
     for (let i = 0; i < count; i++) {
-      if (isBlackHole) {
-        // Accretion disk particle distribution
-        const r = 2.8 + Math.pow(Math.random(), 1.6) * 16.5;
-        const theta = Math.random() * Math.PI * 2;
-        // Make the disk volumetric but very thin
-        const y = (Math.random() - 0.5) * 0.45 * (r < 7 ? 0.3 : 1.4);
+      // Accretion disk particle distribution
+      const r = 2.8 + Math.pow(Math.random(), 1.6) * 16.5;
+      const theta = Math.random() * Math.PI * 2;
+      // Make the disk volumetric but very thin
+      const y = (Math.random() - 0.5) * 0.45 * (r < 7 ? 0.3 : 1.4);
 
-        positions[i * 3] = Math.cos(theta) * r;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = Math.sin(theta) * r;
+      positions[i * 3] = Math.cos(theta) * r;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = Math.sin(theta) * r;
 
-        // Color mapping: inner white/cyan, middle electric blue, outer purple/indigo
-        const t = (r - 2.8) / 16.5; // 0 to 1
-        let c = blue.clone();
-        if (t < 0.15) {
-          c.lerp(white, 1 - (t / 0.15)); // Inner hot white
-        } else if (t > 0.4) {
-          c.lerp(purple, (t - 0.4) / 0.6); // Outer purple space gas
-        }
-
-        const b = 0.5 + Math.random() * 0.5;
-        colors[i * 3] = c.r * b;
-        colors[i * 3 + 1] = c.g * b;
-        colors[i * 3 + 2] = c.b * b;
-        sizes[i] = (0.025 + Math.random() * 0.04) * (hovered ? 1.4 : 1);
-      } else {
-        // Standard spiral galaxy particles
-        const arm = Math.floor(Math.random() * 4);
-        const armAngle = (arm / 4) * Math.PI * 2;
-        const r = Math.pow(Math.random(), 0.6) * 14;
-        const spin = r * 1.2;
-        const angle = armAngle + spin + (Math.random() - 0.5) * (0.5 + r * 0.04);
-        const spread = Math.max(0.1, (1 - r / 16)) * 0.9;
-        positions[i * 3] = Math.cos(angle) * r + (Math.random() - 0.5) * spread;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * spread * 0.35;
-        positions[i * 3 + 2] = Math.sin(angle) * r + (Math.random() - 0.5) * spread;
-        
-        const coreFade = Math.max(0, 1 - r / 5);
-        const b = 0.6 + Math.random() * 0.4;
-        const mixed = baseColor.clone().lerp(white, coreFade * 0.7);
-        colors[i * 3] = mixed.r * b;
-        colors[i * 3 + 1] = mixed.g * b;
-        colors[i * 3 + 2] = mixed.b * b;
-        sizes[i] = (0.03 + coreFade * 0.06 + Math.random() * 0.02) * (hovered ? 1.4 : 1);
+      // Color mapping: inner white/core-tint, middle main color, outer secondary color
+      const t = (r - 2.8) / 16.5; // 0 to 1
+      let c = primary.clone();
+      if (t < 0.15) {
+        c.lerp(white, 1 - (t / 0.15)); // Inner hot white
+      } else if (t > 0.4) {
+        c.lerp(sec, (t - 0.4) / 0.6); // Outer secondary color
       }
+
+      const b = 0.5 + Math.random() * 0.5;
+      colors[i * 3] = c.r * b;
+      colors[i * 3 + 1] = c.g * b;
+      colors[i * 3 + 2] = c.b * b;
+      sizes[i] = (0.025 + Math.random() * 0.04) * (hovered ? 1.4 : 1);
     }
     return { positions, colors, sizes };
-  }, [baseColor, isBlackHole, hovered]);
+  }, [baseColor, secondaryColor, hovered]);
 
   // Outer dust halo
   const { positions: dustPos, colors: dustCol } = useMemo(() => {
     const count = 2000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
-    const blueColor = new THREE.Color('#3b82f6');
 
     for (let i = 0; i < count; i++) {
       const r = 3 + Math.random() * 16;
@@ -186,13 +182,12 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
       positions[i * 3 + 2] = Math.sin(theta) * r * Math.cos(phi);
       const b = 0.3 + Math.random() * 0.3;
 
-      const targetCol = isBlackHole ? blueColor : baseColor;
-      colors[i * 3] = targetCol.r * b;
-      colors[i * 3 + 1] = targetCol.g * b;
-      colors[i * 3 + 2] = targetCol.b * b;
+      colors[i * 3] = baseColor.r * b;
+      colors[i * 3 + 1] = baseColor.g * b;
+      colors[i * 3 + 2] = baseColor.b * b;
     }
     return { positions, colors };
-  }, [baseColor, isBlackHole]);
+  }, [baseColor]);
 
   const mainGeo = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -228,30 +223,14 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
     sizeAttenuation: true,
   }), [hovered]);
 
-  // Glowing core texture for normal galaxies
-  const coreTex = useMemo(() => {
-    if (isBlackHole) return null;
-    const c = document.createElement('canvas');
-    c.width = 256; c.height = 256;
-    const ctx = c.getContext('2d')!;
-    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-    g.addColorStop(0, `rgba(255,255,255,0.9)`);
-    g.addColorStop(0.15, color.replace('#', 'rgba(') ? `${color}cc` : 'rgba(100,150,255,0.8)');
-    g.addColorStop(0.5, `${color}44`);
-    g.addColorStop(1, `${color}00`);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 256, 256);
-    return new THREE.CanvasTexture(c);
-  }, [color, isBlackHole]);
-
   const ringGeo = useMemo(() => new THREE.RingGeometry(14, 15.5, 80), []);
   const ringMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: isBlackHole ? '#00e5ff' : color, 
+    color: color, 
     transparent: true, 
     opacity: hovered ? 0.35 : 0.08,
     side: THREE.DoubleSide, 
     blending: THREE.AdditiveBlending,
-  }), [color, hovered, isBlackHole]);
+  }), [color, hovered]);
 
   useFrame((_, delta) => {
     if (groupRef.current) {
@@ -268,52 +247,32 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
   return (
     <group position={position}>
       <group ref={groupRef} onClick={onClick} onPointerOver={onPointerOver} onPointerOut={onPointerOut}>
-        {/* Main spiral stars / Accretion disk */}
+        {/* Main accretion disk particles */}
         <points geometry={mainGeo} material={mainMat} />
         {/* Dust halo */}
         <points geometry={dustGeo} material={dustMat} />
 
-        {isBlackHole ? (
-          <>
-            {/* Event Horizon (Black Sphere) */}
-            <mesh ref={coreRef}>
-              <sphereGeometry args={[2.5, 32, 32]} />
-              <meshBasicMaterial color="#000000" />
-            </mesh>
-            
-            {/* Accretion Disk Main Plane */}
-            <mesh rotation={[Math.PI / 2.2, 0.15, 0]}>
-              <planeGeometry args={[25, 25]} />
-              <meshBasicMaterial map={blackHoleTex!} transparent depthWrite={false}
-                blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-                opacity={hovered ? 0.95 : 0.75} />
-            </mesh>
+        {/* Event Horizon (Black Sphere) */}
+        <mesh ref={coreRef}>
+          <sphereGeometry args={[2.5, 32, 32]} />
+          <meshBasicMaterial color="#000000" />
+        </mesh>
+        
+        {/* Accretion Disk Main Plane */}
+        <mesh rotation={[Math.PI / 2.2, 0.15, 0]}>
+          <planeGeometry args={[25, 25]} />
+          <meshBasicMaterial map={blackHoleTex} transparent depthWrite={false}
+            blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+            opacity={hovered ? 0.95 : 0.75} />
+        </mesh>
 
-            {/* Accretion Disk Secondary Secondary Glow (Tilted differently for volumetric lensing) */}
-            <mesh rotation={[Math.PI / 2.6, -0.2, 0.1]}>
-              <planeGeometry args={[22, 22]} />
-              <meshBasicMaterial map={blackHoleTex!} transparent depthWrite={false}
-                blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-                opacity={hovered ? 0.55 : 0.35} />
-            </mesh>
-          </>
-        ) : (
-          <>
-            {/* Glowing core */}
-            <mesh ref={coreRef}>
-              <sphereGeometry args={[1.8, 32, 32]} />
-              <meshBasicMaterial color={color} transparent opacity={hovered ? 0.7 : 0.45}
-                blending={THREE.AdditiveBlending} depthWrite={false} />
-            </mesh>
-            {/* Core glow plane */}
-            <mesh rotation={[0, 0, 0]}>
-              <planeGeometry args={[12, 12]} />
-              <meshBasicMaterial map={coreTex!} transparent depthWrite={false}
-                blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
-                opacity={hovered ? 0.8 : 0.5} />
-            </mesh>
-          </>
-        )}
+        {/* Accretion Disk Secondary Glow (Tilted differently for volumetric lensing) */}
+        <mesh rotation={[Math.PI / 2.6, -0.2, 0.1]}>
+          <planeGeometry args={[22, 22]} />
+          <meshBasicMaterial map={blackHoleTex} transparent depthWrite={false}
+            blending={THREE.AdditiveBlending} side={THREE.DoubleSide}
+            opacity={hovered ? 0.55 : 0.35} />
+        </mesh>
 
         {/* Outer ring */}
         <mesh geometry={ringGeo} material={ringMat} rotation={[Math.PI / 2, 0, 0]} />
@@ -324,7 +283,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
         </mesh>
       </group>
       <Billboard follow>
-        <Text position={[0, -17, 0]} fontSize={hovered ? 1.4 : 1.1} color={isBlackHole ? '#ffaa44' : color}
+        <Text position={[0, -17, 0]} fontSize={hovered ? 1.4 : 1.1} color={color}
           anchorX="center" anchorY="middle" fillOpacity={hovered ? 1 : 0.75}
           outlineWidth={0.04} outlineColor="#000000">
           {name}
@@ -337,7 +296,7 @@ function GalaxyCluster({ id, position, color, name, onClick, hovered, onPointerO
         )}
       </Billboard>
       {/* Ambient glow light */}
-      <pointLight color={isBlackHole ? '#ff6000' : color} intensity={hovered ? 12 : 3} distance={hovered ? 30 : 20} decay={2} />
+      <pointLight color={color} intensity={hovered ? 12 : 3} distance={hovered ? 30 : 20} decay={2} />
     </group>
   );
 }
