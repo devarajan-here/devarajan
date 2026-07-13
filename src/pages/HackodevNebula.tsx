@@ -282,6 +282,24 @@ function NebulaDust() {
   );
 }
 
+// ── Custom Skybox component ──────────────────────────────────────────────
+function Skybox() {
+  const { scene } = useThree();
+  useEffect(() => {
+    const loader = new THREE.CubeTextureLoader();
+    const texture = loader.load([
+      '/textures/skybox/px.png',
+      '/textures/skybox/nx.png',
+      '/textures/skybox/py.png',
+      '/textures/skybox/ny.png',
+      '/textures/skybox/pz.png',
+      '/textures/skybox/nz.png',
+    ]);
+    scene.background = texture;
+  }, [scene]);
+  return null;
+}
+
 // ── Galaxies — spread far apart ───────────────────────────────────────────
 const GALAXIES = [
   { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-38,  6,  4] as [number,number,number], route: '/nebula/blue-team' },
@@ -380,12 +398,11 @@ export default function HackodevNebula() {
 
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 6, 38], fov: 65 }} gl={{ antialias: true }}>
-        <color attach="background" args={['#00000d']} />
-        <fog attach="fog" args={['#00000d', 65, 120]} />
+        <Skybox />
         <Stars radius={150} depth={100} count={12000} factor={6} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
         <MouseOrbitCamera focusTarget={hoveredGalaxy?.position ?? null} />
-        <ambientLight intensity={0.1} />
+        <ambientLight intensity={0.2} />
         <pointLight position={[0, 15, 15]} intensity={0.4} color="#4f46e5" />
 
         {GALAXIES.map((g) => (
