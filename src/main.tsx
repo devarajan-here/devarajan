@@ -8,7 +8,7 @@ import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import "./index.css";
 import Landing from "./pages/Landing.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -69,6 +69,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/soc" element={<SocIntro />} />
             <Route path="/soc/:domain" element={<SocDomain />} />
             <Route path="/red-team/:domain" element={<RedTeamDomain />} />
+            <Route path="/cloud/malware-analytics" element={<Navigate to="/threat-intel/malware-analytics" replace />} />
             <Route path="/cloud/:domain" element={<UniverseDomain />} />
             <Route path="/threat-intel/:domain" element={<UniverseDomain />} />
             <Route path="*" element={<NotFound />} />

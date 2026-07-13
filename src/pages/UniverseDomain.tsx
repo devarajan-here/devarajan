@@ -98,16 +98,6 @@ const CLOUD_DOMAINS: Record<string, UniverseDomainData> = {
     practice: ['Create a storage-and-queue module', 'Block public access through policy', 'Run an IaC scanner in CI', 'Rebuild the lab from a clean state'],
     outputs: ['IaC module', 'Policy tests', 'CI check', 'Drift checklist'],
   },
-  'malware-analytics': {
-    title: 'Cloud Malware Analytics',
-    subtitle: 'Safe sample intake, isolated analysis, telemetry, and intelligence output',
-    metrics: ['Isolation', 'Triage', 'Behavior', 'Evidence'],
-    overview: 'A cloud-oriented malware analysis pipeline receives samples safely, stores them with strict access control, performs static and dynamic triage in isolated workers, and turns observations into detections and threat intelligence. Use harmless test files until you have a purpose-built isolated lab.',
-    path: ['Design a quarantined sample intake workflow', 'Hash and inventory every artifact', 'Run static triage on harmless samples', 'Collect process, file, DNS, and network behavior', 'Create YARA, Sigma, and intelligence outputs'],
-    tools: ['REMnux', 'FLARE-VM', 'Ghidra', 'YARA', 'CAPEv2', 'VirusTotal for permitted hashes', 'Object storage concepts'],
-    practice: ['Use the EICAR test file instead of live malware', 'Build a local upload-to-queue workflow', 'Extract metadata and hashes in an isolated worker', 'Create a detection from observed behavior'],
-    outputs: ['Sample manifest', 'Behavior timeline', 'YARA rule', 'IOC package', 'Analyst report'],
-  },
   'incident-response': {
     title: 'Cloud Incident Response',
     subtitle: 'Prepare, investigate, contain, recover, and improve',
@@ -151,11 +141,11 @@ const INTEL_DOMAINS: Record<string, UniverseDomainData> = {
     path: ['Create an entity and naming model', 'Build a chronological activity timeline', 'Compare recurring techniques and infrastructure', 'Assess targeting and likely objectives', 'Review alternative explanations and confidence'],
     tools: ['OpenCTI', 'MISP', 'ATT&CK Navigator', 'Graph tooling', 'Timeline tooling'], practice: ['Compare two public campaign reports', 'Normalize overlapping aliases', 'Build a confidence-scored timeline', 'Write competing attribution hypotheses'], outputs: ['Actor profile', 'Campaign timeline', 'TTP matrix', 'Confidence statement'],
   },
-  'malware-intelligence': {
-    title: 'Malware Intelligence', subtitle: 'Connect technical behavior to families, campaigns, and defensive action', metrics: ['Family', 'Behavior', 'Config', 'Links'],
-    overview: 'Malware intelligence uses analysis results to identify capabilities, configuration, infrastructure, and relationships. The goal is actionable context for detection and response, not handling live samples without an isolated lab.',
-    path: ['Start with verified hashes and metadata', 'Summarize capabilities and execution behavior', 'Extract configuration and infrastructure carefully', 'Compare code or behavior with known families', 'Publish detections and confidence-scored relationships'],
-    tools: ['YARA', 'Ghidra', 'CAPEv2', 'MalwareBazaar', 'OpenCTI'], practice: ['Analyze a published sandbox report', 'Cluster samples by shared behavior', 'Write a safe YARA exercise on benign files', 'Map capabilities to ATT&CK'], outputs: ['Family profile', 'Behavior summary', 'YARA rule', 'Relationship set'],
+  'malware-analytics': {
+    title: 'Malware Analytics', subtitle: 'Safely turn sample behavior into threat intelligence and defensive action', metrics: ['Isolation', 'Triage', 'Behavior', 'Intelligence'],
+    overview: 'Malware analytics connects isolated technical analysis with threat intelligence. Analysts identify capabilities, configuration, infrastructure, family relationships, and observable behavior, then convert the evidence into detections and confidence-scored reporting.',
+    path: ['Start with verified hashes, provenance, and metadata', 'Perform safe static triage in an isolated lab', 'Study published dynamic behavior or approved test samples', 'Relate capabilities and infrastructure to campaigns', 'Publish YARA, Sigma, IOCs, and confidence-scored findings'],
+    tools: ['REMnux', 'FLARE-VM', 'Ghidra', 'YARA', 'CAPEv2', 'MalwareBazaar', 'OpenCTI'], practice: ['Use the EICAR test file instead of live malware', 'Analyze a published sandbox report', 'Write a safe YARA exercise on benign files', 'Map observed capabilities to ATT&CK'], outputs: ['Sample manifest', 'Behavior timeline', 'Family assessment', 'YARA rule', 'IOC package'],
   },
   'infrastructure-tracking': {
     title: 'Infrastructure Tracking', subtitle: 'Pivot across DNS, certificates, hosting, and time', metrics: ['DNS', 'TLS', 'Hosting', 'Timeline'],

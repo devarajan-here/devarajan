@@ -9,15 +9,14 @@ const CLOUD_NODES: LearningNode[] = [
   { name: 'Detection & Logging', tagline: 'Audit trails · posture · alerting', route: '/cloud/cloud-detection', color: '#22d3ee', radius: 11.8, speed: 0.073, tilt: 0.48, size: 0.46, angle: 5.65, rings: true },
   { name: 'Containers & K8s', tagline: 'Images · workloads · runtime security', route: '/cloud/containers', color: '#60a5fa', radius: 13.5, speed: 0.06, tilt: 1.18, size: 0.48, angle: 2.6 },
   { name: 'Infrastructure as Code', tagline: 'Terraform · policy · safe dry runs', route: '/cloud/infrastructure-as-code', color: '#a78bfa', radius: 15.1, speed: 0.05, tilt: 0.72, size: 0.45, angle: 0.7 },
-  { name: 'Malware Analytics', tagline: 'Safe samples · telemetry · triage', route: '/cloud/malware-analytics', color: '#2dd4bf', radius: 16.7, speed: 0.043, tilt: 1.28, size: 0.5, angle: 4.15, rings: true },
-  { name: 'Cloud Incident Response', tagline: 'Contain · investigate · recover', route: '/cloud/incident-response', color: '#f472b6', radius: 18.3, speed: 0.037, tilt: 0.9, size: 0.47, angle: 5.35 },
+  { name: 'Cloud Incident Response', tagline: 'Contain · investigate · recover', route: '/cloud/incident-response', color: '#f472b6', radius: 16.7, speed: 0.043, tilt: 0.9, size: 0.47, angle: 5.35 },
 ];
 
 export default function CloudNebula() {
   return (
     <LearningUniverse
       title="CLOUD SECURITY NEBULA"
-      subtitle="AWS · Azure · GCP · Local labs · Malware analytics"
+      subtitle="AWS · Azure · GCP · Local labs · Detection engineering"
       coreLabel="FLOCI LOCAL LAB CORE"
       nodes={CLOUD_NODES}
       palette={['#8b5cf6', '#67e8f9', '#2563eb']}
