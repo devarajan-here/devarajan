@@ -288,12 +288,12 @@ function Skybox() {
   useEffect(() => {
     const loader = new THREE.CubeTextureLoader();
     const texture = loader.load([
-      '/textures/skybox/px.png',
-      '/textures/skybox/nx.png',
-      '/textures/skybox/py.png',
-      '/textures/skybox/ny.png',
-      '/textures/skybox/pz.png',
-      '/textures/skybox/nz.png',
+      '/textures/skybox/px.png?v=4k',
+      '/textures/skybox/nx.png?v=4k',
+      '/textures/skybox/py.png?v=4k',
+      '/textures/skybox/ny.png?v=4k',
+      '/textures/skybox/pz.png?v=4k',
+      '/textures/skybox/nz.png?v=4k',
     ]);
     scene.background = texture;
   }, [scene]);
