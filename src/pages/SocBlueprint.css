@@ -22,6 +22,161 @@
   position: relative;
 }
 
+.soc-blueprint.red-blueprint {
+  --bg: #080203;
+  --panel: #120607;
+  --border: #4a1717;
+  --accent: #ff4d2e;
+  --accent2: #ff9f43;
+  --accent3: #fb7185;
+  --warn: #fbbf24;
+  --red: #ff334f;
+  --text: #f4d7d7;
+  --dim: #9a6060;
+  --glow: 0 0 24px rgba(255, 52, 36, 0.28);
+}
+
+.soc-blueprint.red-blueprint::before {
+  background-image:
+    linear-gradient(rgba(255, 62, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 62, 42, 0.035) 1px, transparent 1px);
+}
+
+.soc-blueprint.cloud-blueprint {
+  --bg: #03040d;
+  --panel: #090b1c;
+  --border: #25225c;
+  --accent: #8b5cf6;
+  --accent2: #38bdf8;
+  --accent3: #2dd4bf;
+  --warn: #f0abfc;
+  --red: #f472b6;
+  --text: #ddd6fe;
+  --dim: #7777a8;
+  --glow: 0 0 24px rgba(139, 92, 246, 0.26);
+}
+
+.soc-blueprint.intel-blueprint {
+  --bg: #090500;
+  --panel: #130c03;
+  --border: #4c2b0b;
+  --accent: #f59e0b;
+  --accent2: #fb923c;
+  --accent3: #facc15;
+  --warn: #fde68a;
+  --red: #ef4444;
+  --text: #fef3c7;
+  --dim: #9a7242;
+  --glow: 0 0 24px rgba(245, 158, 11, 0.24);
+}
+
+.soc-blueprint.cloud-blueprint::before {
+  background-image:
+    linear-gradient(rgba(139, 92, 246, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.025) 1px, transparent 1px);
+}
+
+.soc-blueprint.intel-blueprint::before {
+  background-image:
+    linear-gradient(rgba(245, 158, 11, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(249, 115, 22, 0.025) 1px, transparent 1px);
+}
+
+.local-lab-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 30px;
+  padding: 20px 22px;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.11), rgba(139, 92, 246, 0.12));
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.06);
+}
+
+.local-lab-banner strong {
+  display: block;
+  color: #fff;
+  font-size: 18px;
+  margin: 4px 0 7px;
+}
+
+.local-lab-banner p,
+.local-command-card p {
+  color: #9fa8c9;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.local-lab-banner .lab-kicker {
+  color: var(--accent3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.local-lab-banner a {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--accent3);
+  color: var(--accent3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.local-lab-banner a:hover {
+  background: rgba(45, 212, 191, 0.12);
+  color: #fff;
+}
+
+.local-command-card {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.local-command-card pre {
+  overflow-x: auto;
+  margin: 14px 0 12px;
+  padding: 16px;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  background: #020607;
+  color: #7fffd4;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.learning-note {
+  margin-top: 30px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  padding: 16px 18px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+  .local-lab-banner { align-items: flex-start; flex-direction: column; }
+}
+
+.red-blueprint .red-safety-note {
+  margin-top: 30px;
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  background: rgba(127, 29, 29, 0.18);
+  padding: 16px 18px;
+  color: #fecaca;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
 .soc-blueprint::before {
   content: '';
   position: fixed;

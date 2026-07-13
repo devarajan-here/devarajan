@@ -373,10 +373,9 @@ function SkySphere() {
 // ── Galaxies — spread far apart ───────────────────────────────────────────
 const GALAXIES = [
   { id: 'blue-team',    name: 'Blue Team Galaxy',       color: '#3b82f6', position: [-38,  6,  4] as [number,number,number], route: '/nebula/blue-team' },
-  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 35, -8,-14] as [number,number,number], route: null },
-  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  4, 18,-40] as [number,number,number], route: null },
-  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-20,-18,-32] as [number,number,number], route: null },
-  { id: 'malware',      name: 'Malware Analytics',     color: '#10b981', position: [ 40, 12, 16] as [number,number,number], route: null },
+  { id: 'red-team',     name: 'Red Team Galaxy',        color: '#ef4444', position: [ 35, -8,-14] as [number,number,number], route: '/nebula/red-team' },
+  { id: 'cloud-sec',    name: 'Cloud Nebula',           color: '#a855f7', position: [  8, 20,-38] as [number,number,number], route: '/nebula/cloud' },
+  { id: 'threat-intel', name: 'Threat Intel Cluster',  color: '#f59e0b', position: [-22,-20,-28] as [number,number,number], route: '/nebula/threat-intel' },
 ];
 
 // ── Main page ─────────────────────────────────────────────────────────────
