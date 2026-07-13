@@ -283,7 +283,7 @@ function NebulaDust() {
 }
 
 // ── Custom SkySphere component (replaces cubemap with repeating sphere) ───
-function SkySphere() {
+function SkySphere({ texturePath }: { texturePath: string }) {
   const { scene } = useThree();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
@@ -292,13 +292,13 @@ function SkySphere() {
     scene.background = null;
 
     const loader = new THREE.TextureLoader();
-    loader.load('/textures/skybox/stars.png?v=2', (tex) => {
+    loader.load(texturePath, (tex) => {
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
       tex.repeat.set(8, 6); // Repeat the space image seamlessly across the sphere
       setTexture(tex);
     });
-  }, [scene]);
+  }, [scene, texturePath]);
 
   if (!texture) return null;
 
@@ -326,6 +326,13 @@ export default function HackodevNebula() {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonName, setComingSoonName] = useState('');
   const [musicIndex, setMusicIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
+  
+  const SCENERIES = useMemo(() => [
+    { name: 'Classic Stars', path: '/textures/skybox/stars.png?v=2' },
+    { name: 'Emerald Nebula', path: '/textures/skybox/stars_green.png?v=2' },
+  ], []);
+
   const hoveredGalaxy = useMemo(
     () => GALAXIES.find((galaxy) => galaxy.id === hoveredId) ?? null,
     [hoveredId],
@@ -356,6 +363,11 @@ export default function HackodevNebula() {
       globalAudio.play().catch(() => {});
     }
   }, [musicIndex, TRACKS]);
+
+  // Cycle to next background scenery
+  const handleNextBg = useCallback(() => {
+    setBgIndex((prev) => (prev + 1) % SCENERIES.length);
+  }, [SCENERIES]);
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
@@ -408,7 +420,7 @@ export default function HackodevNebula() {
 
       {/* 3D Canvas */}
       <Canvas camera={{ position: [0, 6, 38], fov: 65 }} gl={{ antialias: true }}>
-        <SkySphere />
+        <SkySphere texturePath={SCENERIES[bgIndex].path} />
         <Stars radius={150} depth={100} count={12000} factor={6} saturation={0.2} fade speed={0.4} />
         <NebulaDust />
         <MouseOrbitCamera focusTarget={hoveredGalaxy?.position ?? null} />
@@ -428,6 +440,18 @@ export default function HackodevNebula() {
           />
         ))}
       </Canvas>
+
+      {/* Floating Scenery Change Button (Stacked above audio button) */}
+      <button
+        onClick={handleNextBg}
+        className="fixed bottom-[100px] right-6 z-50 p-4 rounded-full bg-black border border-white/20 text-white shadow-lg hover:shadow-xl hover:bg-white hover:text-black transition-all duration-300 hover:scale-110 group"
+        aria-label="Change space scenery"
+        title={`Change scenery (Current: ${SCENERIES[bgIndex].name})`}
+      >
+        <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375 0 11-.75 0 .375 0 01.75 0z"/>
+        </svg>
+      </button>
 
       {/* Coming soon toast */}
       <AnimatePresence>
